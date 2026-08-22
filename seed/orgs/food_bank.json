@@ -31,5 +31,10 @@
       "frecuencia": "monthly",
       "urgencia": "media"
     }
-  ]
+  ],
+  "ubicacion": {
+    "lat": 41.8613,
+    "lon": -87.6553,
+    "direccion": "1642 W 16th St"
+  }
 }

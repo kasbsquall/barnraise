@@ -27,11 +27,19 @@ export const Camera2D: React.FC<{
   const frame = useCurrentFrame();
   const fs = keys.map((k) => k.f);
   const ease = {
-    easing: (t: number) => {
-      // cubic-bezier(0.5, 0, 0.25, 1), sampled: symmetric in, softer out.
-      const u = 1 - t;
-      return 3 * u * t * t * 0.25 + t * t * t + 3 * u * u * t * 0;
-    },
+    // Smootherstep: zero velocity AND zero acceleration at both ends, so the
+    // camera starts from rest and genuinely settles.
+    //
+    // What was here before claimed to be cubic-bezier(0.5, 0, 0.25, 1) and was
+    // not. It evaluated the Bernstein form with the time fraction substituted
+    // for the Bezier parameter, skipping the solve for t that a real CSS easing
+    // does. The resulting curve reaches only 22% of its travel at the halfway
+    // point and has a derivative of 2.25 at the end, so the camera accelerated
+    // for the whole segment and hit every keyframe at peak speed with no
+    // deceleration. That is the signature of a UI transition, and it is the
+    // opposite of what the comment promised: on the three-keyframe move it
+    // produced a visible lurch at each one.
+    easing: (t: number) => t * t * t * (t * (t * 6 - 15) + 10),
     extrapolateLeft: 'clamp' as const,
     extrapolateRight: 'clamp' as const,
   };

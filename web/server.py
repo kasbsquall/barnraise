@@ -29,6 +29,9 @@ DIRECTORES = {
     "central-library": "Ana Torres",
     "north-food-bank": "Luis Mendoza",
     "san-martin-school": "Rosa Diaz",
+    "riverside-health-post": "Elena Fuentes",
+    "casa-vecinal-kitchen": "Marta Ochoa",
+    "eastside-youth-club": "Diego Salas",
 }
 
 app = FastAPI(title="Barnraise")
@@ -55,6 +58,20 @@ async def index() -> FileResponse:
         STATIC / "index.html",
         headers={"Cache-Control": "no-store, must-revalidate"},
     )
+
+
+@app.get("/api/routes")
+async def rutas() -> dict:
+    """The driving route between every pair of organizations.
+
+    Served apart from the state because it is 33KB of geometry that never
+    changes, and precomputed rather than fetched live so the neighborhood still
+    draws its routes in a room with no network. See seed/build_routes.py.
+    """
+    f = ROOT / "seed" / "routes.json"
+    if not f.exists():
+        return {"rutas": [], "nota": "run seed/build_routes.py to cache the routes"}
+    return json.loads(f.read_text(encoding="utf-8"))
 
 
 @app.get("/api/state")
@@ -85,7 +102,9 @@ async def state() -> dict:
             "tipo": p.tipo,
             "descripcion": p.descripcion,
             "poblacion": p.poblacion_atendida,
-            "director": DIRECTORES.get(p.org_id, "Direccion"),
+            "director": DIRECTORES.get(p.org_id, "Director"),
+            "ubicacion": ({"lat": p.ubicacion.lat, "lon": p.ubicacion.lon,
+                           "direccion": p.ubicacion.direccion} if p.ubicacion else None),
             "recursos": [
                 {"id": r.id, "nombre": r.nombre, "disponibilidad": r.disponibilidad, "notas": r.notas}
                 for r in p.recursos

@@ -1,0 +1,40 @@
+{
+  "org_id": "casa-vecinal-kitchen",
+  "nombre": "Casa Vecinal Kitchen",
+  "tipo": "community kitchen",
+  "descripcion": "Mutual aid kitchen run by neighbours. Cooks and distributes hot meals four evenings a week.",
+  "poblacion_atendida": 540,
+  "ubicacion": {
+    "lat": 41.8556,
+    "lon": -87.6643,
+    "direccion": "2214 W 21st St"
+  },
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "industrial kitchen with six burners and two ovens",
+      "disponibilidad": "weekday mornings",
+      "notas": "certified, we only use it from 4pm"
+    },
+    {
+      "id": "R2",
+      "nombre": "volunteer cooks and insulated catering trays",
+      "disponibilidad": "Saturday",
+      "notas": "eight regular volunteers, trays for 120 portions"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "surplus vegetables and dry goods to cook with",
+      "frecuencia": "weekly",
+      "urgencia": "alta"
+    },
+    {
+      "id": "N2",
+      "descripcion": "cold room space between collection and cooking",
+      "frecuencia": "weekly",
+      "urgencia": "media"
+    }
+  ]
+}

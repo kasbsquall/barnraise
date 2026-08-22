@@ -1,25 +1,17 @@
 import {Composition} from 'remotion';
 import {Agents, AGENTS_DUR} from './scenes/Agents';
-import type {Treatment} from './scenes/Agents';
 import {FPS} from './theme';
 
-// Three camera treatments of the same scene, so the choice is made by watching
-// rather than by reading a description of it.
-const TREATMENTS: Treatment[] = ['reveal', 'locked', 'gentle'];
-
+// One composition, not three. Two independent reviewers picked the held frame
+// over both camera moves and for the same reason: the moves cost information the
+// scene needs. Keeping the losing treatments around invites rebuilding them.
 export const RemotionRoot: React.FC = () => (
-  <>
-    {TREATMENTS.map((t) => (
-      <Composition
-        key={t}
-        id={`S4-${t}`}
-        component={Agents}
-        defaultProps={{treatment: t}}
-        durationInFrames={AGENTS_DUR}
-        fps={FPS}
-        width={1920}
-        height={1080}
-      />
-    ))}
-  </>
+  <Composition
+    id="S4-agents"
+    component={Agents}
+    durationInFrames={AGENTS_DUR}
+    fps={FPS}
+    width={1920}
+    height={1080}
+  />
 );

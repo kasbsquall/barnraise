@@ -12,8 +12,20 @@ const ROUTE = {
   "north-food-bank": "food",
   "central-library": "lib",
   "san-martin-school": "school",
+  "riverside-health-post": "health",
+  "casa-vecinal-kitchen": "kitchen",
+  "eastside-youth-club": "youth",
 };
 const routeOf = (orgId) => ROUTE[orgId] || "lib";
+
+// The same six values as hex. MapLibre paints from a style expression and cannot
+// read a CSS custom property, so the map needs the literal. Kept beside ROUTE so
+// a colour change touches one place.
+const ROUTE_HEX = {
+  food: "#ffb599", lib: "#75d4ea", school: "#e3c05f",
+  health: "#8ed6a9", kitchen: "#d79ad6", youth: "#9fb0f5",
+};
+const routeHex = (orgId) => ROUTE_HEX[routeOf(orgId)];
 
 const REDUCE = matchMedia("(prefers-reduced-motion: reduce)");
 // Sampled once at parse time meant a viewer who turned reduced motion on kept
@@ -165,9 +177,9 @@ function render() {
   renderFund();
   renderLedger();
   renderMap();
-  renderOrgs();
   renderPhase(state.ronda?.fase || "idle");
   renderPending(state.ronda?.pendiente || null);
+  renderOrgCard();
   if (state.actividad?.length) {
     // History is replayed, not re-lived: these events already happened, so they
     // are painted whole. Only what arrives over the stream is typed.
@@ -470,151 +482,31 @@ function renderLedger() {
 // fixed offset, which put "SERVES 480" on top of the coral vertical and cut the
 // first and last glyph of the other two. A transit diagram with a line drawn
 // through its own data is the one thing this map cannot afford.
-const STATIONS = {
-  "north-food-bank":  { x: 280, y: 80,  anchor: "middle", dy: -30, sdy: -48, sdx: 0 },
-  "central-library":  { x: 150, y: 250, anchor: "end",    dy: -26, sdy: -4,  sdx: -22 },
-  "san-martin-school":{ x: 410, y: 250, anchor: "start",  dy: -26, sdy: -4,  sdx: 22 },
-};
-// Where along each leg its agreement count sits, and how far to push it off the
-// line. Two labels parked at their own midpoints met at the shared corner under
-// the food bank and read as one run-on string.
-const LINK_LABEL = {
-  "central-library|north-food-bank":   { at: 0.34, dx: -16, dy: -10 },
-  "north-food-bank|san-martin-school": { at: 0.34, dx: 16,  dy: -10 },
-  "central-library|san-martin-school": { at: 0.5,  dx: 0,   dy: 18 },
-};
-const ROUTE_PATH = {
-  "central-library|north-food-bank":  "M280,80 V150 L180,250 H150",
-  "north-food-bank|san-martin-school":"M280,80 V150 L380,250 H410",
-  "central-library|san-martin-school":"M150,250 V300 H410 V250",
-};
-
-/**
- * Sends a pulse along the route between two organizations when their agents
- * actually exchange a message.
- *
- * Until now the map drew the agreements already fulfilled and then sat still,
- * so a round could run to completion with the feed filling and the map inert.
- * A diagram of a neighborhood that does not move while the neighborhood is
- * talking is decoration. What travels here is one real message.
- *
- * The dot walks the path with getPointAtLength rather than a CSS offset-path,
- * because the route is an SVG path with corners and offset-path support for
- * those is uneven.
- */
-function pulseRoute(fromId, toId) {
-  if (!fromId || !toId || fromId === toId) return;
-  const svg = $("#map");
-  const line = svg?.querySelector(`path[data-link="${[fromId, toId].sort().join("|")}"]`);
-  if (!line) return;
-
-  const len = line.getTotalLength();
-  const start = line.getPointAtLength(0);
-  const here = STATIONS[fromId];
-  const there = STATIONS[toId];
-  if (!here || !there) return;
-  // The path is stored under a sorted key, so it may run either way. Whichever
-  // end is nearer the sender is where this message starts.
-  const forward = Math.hypot(start.x - here.x, start.y - here.y)
-                < Math.hypot(start.x - there.x, start.y - there.y);
-
-  line.classList.add("map__route--live");
-  const clear = () => line.classList.remove("map__route--live");
-
-  // Which station spoke and which one heard it, each at its own moment. Without
-  // this the message is a dot crossing a diagram; with it the map reads as two
-  // organizations taking turns.
-  const ring = (orgId) => {
-    const st = svg.querySelector(`circle[data-org="${orgId}"]`);
-    if (!st) return;
-    st.classList.add("map__station--hit");
-    setTimeout(() => st.classList.remove("map__station--hit"), 520);
-  };
-  ring(fromId);
-
-  if (REDUCE.matches) { setTimeout(() => { clear(); ring(toId); }, 500); return; }
-
-  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  dot.setAttribute("r", 6);
-  dot.setAttribute("class", `map__pulse map__pulse--${routeOf(fromId)}`);
-  svg.append(dot);
-
-  const DUR = 900;
-  let t0 = null;
-  const step = (now) => {
-    if (t0 === null) t0 = now;
-    const p = Math.min(1, (now - t0) / DUR);
-    const eased = 1 - Math.pow(1 - p, 3);
-    const at = line.getPointAtLength((forward ? eased : 1 - eased) * len);
-    dot.setAttribute("cx", at.x);
-    dot.setAttribute("cy", at.y);
-    dot.setAttribute("opacity", String(p < 0.12 ? p / 0.12 : p > 0.86 ? (1 - p) / 0.14 : 1));
-    if (p < 1) return requestAnimationFrame(step);
-    dot.remove();
-    clear();
-    ring(toId);
-  };
-  requestAnimationFrame(step);
-}
-
+/* The neighborhood lives on a real map now: see neighborhood.js. What used to be
+   here was a hand-placed transit diagram with invented station coordinates, a
+   hand-written path per pair, and a pulse walking those paths. All three are
+   replaced by real geography, real driving routes and real distances. */
 
 function renderMap() {
-  const svg = $("#map");
-  const NS = "http://www.w3.org/2000/svg";
-  [...svg.querySelectorAll(":scope > *:not(desc)")].forEach((n) => n.remove());
+  if (!window.NB) return;
+  NB.drawLinks(state.vinculos || []);
 
-  const add = (tag, attrs, text) => {
-    const n = document.createElementNS(NS, tag);
-    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
-    if (text !== undefined) n.textContent = text;
-    svg.append(n);
-    return n;
-  };
-
-  for (let x = 0; x <= 560; x += 40) add("line", { x1: x, y1: 0, x2: x, y2: 340, class: "map__grid" });
-  for (let y = 0; y <= 340; y += 40) add("line", { x1: 0, y1: y, x2: 560, y2: y, class: "map__grid" });
-
-  const max = Math.max(1, ...state.vinculos.map((v) => v.acuerdos));
-  state.vinculos.forEach((v, i) => {
-    const key = [v.a, v.b].sort().join("|");
-    const d = ROUTE_PATH[key];
-    if (!d) return;
-    const width = 3 + (v.acuerdos / max) * 8;
-    const owner = routeOf(v.a);
-    const line = add("path", { d, "data-link": key, class: `map__route map__route--${owner}`, "stroke-width": width });
-    if (!REDUCE.matches) {
-      const len = line.getTotalLength();
-      line.setAttribute("stroke-dasharray", len);
-      line.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
-        { duration: 620, delay: 120 + i * 90, easing: "cubic-bezier(0.23,1,0.32,1)" });
-    }
-    const place = LINK_LABEL[key] || { at: 0.5, dx: 0, dy: -16 };
-    const at = line.getPointAtLength(line.getTotalLength() * place.at);
-    add("text", { x: at.x + place.dx, y: at.y + place.dy, "text-anchor": "middle",
-                  class: "map__meta" },
-        `${v.acuerdos} agreement${v.acuerdos === 1 ? "" : "s"}`);
-  });
-
-  state.organizaciones.forEach((o) => {
-    const p = STATIONS[o.org_id];
-    if (!p) return;
-    add("circle", { cx: p.x, cy: p.y, r: 9, class: "map__station", "data-org": o.org_id,
-                    stroke: `var(--route-${routeOf(o.org_id)})` });
-    add("text", { x: p.x, y: p.y + p.dy, "text-anchor": p.anchor, class: "map__label" },
-        o.nombre.toUpperCase());
-    add("text", { x: p.x + (p.sdx || 0), y: p.y + (p.sdy ?? 26),
-                  "text-anchor": p.anchor, class: "map__meta" },
-        `SERVES ${o.poblacion.toLocaleString("en-US")}`);
-  });
-
-  const legend = $("#map-legend");
-  legend.replaceChildren();
-  state.organizaciones.forEach((o) => {
-    const item = el("span", "legend__item");
-    item.innerHTML = `<span class="legend__swatch" style="background:var(--route-${routeOf(o.org_id)})"></span>${esc(o.nombre)}`;
-    legend.append(item);
-  });
+  // The pins say who has something to decide, so the map answers the question
+  // "where do I come in" without a caption.
+  const esperando = (state.acuerdos || [])
+    .filter((a) => a.estado === "propuesto")
+    .flatMap((a) => [a.org_proveedora, a.org_solicitante]
+      .filter((org) => !(state.firmas_acuerdo || []).some(
+        (f) => f.acuerdo_id === a.id && f.org_id === org && f.decision === "aprobado")));
+  const pendiente = state.ronda?.pendiente?.org_id;
+  NB.markWaiting([...new Set([...esperando, ...(pendiente ? [pendiente] : [])])]);
 }
+
+/** Sends a message across the map, along the road it would actually travel. */
+function pulseRoute(fromId, toId) {
+  window.NB?.pulseRoute(fromId, toId);
+}
+
 
 const RESOURCE_ICON = (t) => {
   const s = t.toLowerCase();
@@ -626,29 +518,9 @@ const RESOURCE_ICON = (t) => {
   return "swap";
 };
 
-function renderOrgs() {
-  const box = $("#orgs");
-  box.replaceChildren();
-  state.organizaciones.forEach((o, i) => {
-    const card = el("div", "org");
-    enter(card, i);
-    const things = o.recursos.map((r) =>
-      `<span class="thing">${icon(RESOURCE_ICON(r.nombre))}<span>${esc(r.nombre)}<br>` +
-      `<span class="thing__when">${esc(r.disponibilidad)}</span></span></span>`).join("");
-    const needs = o.necesidades.map((n) =>
-      `<span class="thing thing--need">${icon(RESOURCE_ICON(n.descripcion))}<span>needs: ${esc(n.descripcion)}<br>` +
-      `<span class="thing__when">${esc(n.frecuencia)}</span>` +
-      `<span class="urg urg--${n.urgencia}">${n.urgencia === "alta" ? "urgent" : n.urgencia === "media" ? "soon" : "when possible"}</span>` +
-      `</span></span>`).join("");
-    card.innerHTML =
-      `<div class="org__top"><span class="org__name">${esc(o.nombre)}</span>` +
-      `<span class="org__pop">${o.poblacion.toLocaleString("en-US")}</span></div>` +
-      `<p class="org__dir">${esc(o.director)}</p><div class="things">${things}${needs}</div>`;
-    box.append(card);
-  });
-}
-
-/* ---------- the decision ---------- */
+/* The organization list moved onto the map: six pins carry the same thing and
+   a click opens the full card. A column repeating it under the map was the
+   same information twice. */
 
 function renderPhase(fase) {
   const bar = $("#live");
@@ -978,7 +850,83 @@ $("#btn-decline").addEventListener("click", () => {
   decide("rechazado");
 });
 
-document.querySelectorAll(".shell section").forEach((s, i) => s.style.setProperty("--b", i));
+/* ---------- views ---------- */
 
-load().catch(() => {});
-connect();
+let vista = "now";
+let seleccionada = null;      // the organization the map has focused, if any
+
+function mostrarVista(v) {
+  vista = v;
+  document.querySelectorAll(".view").forEach((b) => {
+    const on = b.dataset.view === v;
+    b.toggleAttribute("aria-current", on);
+    if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+  });
+  document.querySelectorAll(".view-pane").forEach((p) => { p.hidden = p.dataset.pane !== v; });
+  $("#panel").scrollTop = 0;
+}
+
+document.querySelectorAll(".view").forEach((b) => {
+  b.addEventListener("click", () => mostrarVista(b.dataset.view));
+});
+
+/** The card for whichever organization the map has selected. */
+function renderOrgCard() {
+  const box = $("#orgcard");
+  const o = state?.organizaciones.find((x) => x.org_id === seleccionada);
+  if (!o) { box.hidden = true; box.replaceChildren(); return; }
+
+  box.hidden = false;
+  box.replaceChildren();
+  const card = el("div", `orgcard orgcard--${routeOf(o.org_id)}`);
+
+  // Distance matters here: these exchanges are a van driving somewhere.
+  const desde = state.organizaciones
+    .filter((x) => x.org_id !== o.org_id)
+    .map((x) => ({nombre: x.nombre, org: x.org_id, etiqueta: NB?.routeLabel(o.org_id, x.org_id) || ""}))
+    .filter((x) => x.etiqueta);
+
+  card.innerHTML =
+    `<button class="orgcard__close" type="button" aria-label="Close">${icon("x")}</button>` +
+    `<p class="label">${esc(o.tipo)}</p>` +
+    `<h3 class="orgcard__name">${esc(o.nombre)}</h3>` +
+    `<p class="hint">${esc(o.director)} · serves ${o.poblacion.toLocaleString("en-US")} people` +
+      (o.ubicacion?.direccion ? ` · ${esc(o.ubicacion.direccion)}` : "") + `</p>` +
+    `<p class="orgcard__desc">${esc(o.descripcion)}</p>` +
+    `<p class="label orgcard__sub">Idle right now</p>` +
+    o.recursos.map((r) =>
+      `<span class="thing">${icon(RESOURCE_ICON(r.nombre))}<span>${esc(r.nombre)}<br>` +
+      `<span class="thing__when">${esc(r.disponibilidad)}</span></span></span>`).join("") +
+    `<p class="label orgcard__sub">Needs</p>` +
+    o.necesidades.map((n) =>
+      `<span class="thing thing--need">${icon(RESOURCE_ICON(n.descripcion))}<span>${esc(n.descripcion)}<br>` +
+      `<span class="thing__when">${esc(n.frecuencia)}</span></span></span>`).join("") +
+    `<p class="label orgcard__sub">By road from here</p>` +
+    `<ul class="dists">` + desde.map((d) =>
+      `<li><span class="dot dot--${routeOf(d.org)}"></span>${esc(d.nombre)}` +
+      `<span class="dists__n">${esc(d.etiqueta)}</span></li>`).join("") + `</ul>`;
+
+  card.querySelector(".orgcard__close").addEventListener("click", () => selectOrg(null));
+  box.append(card);
+}
+
+function selectOrg(orgId) {
+  seleccionada = orgId;
+  renderOrgCard();
+  window.NB?.focusOrg(orgId, state?.organizaciones || []);
+  if (orgId) mostrarVista("now");
+}
+
+/* ---------- boot ---------- */
+
+// Called from the page once maplibre-gl and both scripts have parsed.
+window.__boot = async () => {
+  await load().catch(() => {});
+  if (window.NB) {
+    const n = await NB.loadRoutes();
+    NB.buildMap(state?.organizaciones || [], selectOrg);
+    document.addEventListener("map:ready", () => { renderMap(); }, {once: true});
+    if (!n) console.warn("no cached routes: run seed/build_routes.py");
+  }
+  connect();
+};

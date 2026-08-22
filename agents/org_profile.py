@@ -12,28 +12,42 @@ from pathlib import Path
 @dataclass
 class Resource:
     id: str
-    nombre: str            # "camioneta de reparto"
-    disponibilidad: str    # "martes 9am-5pm"
+    nombre: str            # "delivery van"
+    disponibilidad: str    # "Tuesdays 9am-5pm"
     notas: str = ""
 
 
 @dataclass
 class Need:
     id: str
-    descripcion: str       # "transporte para recoger donaciones"
-    frecuencia: str        # "semanal", "puntual"
+    descripcion: str       # "transport to collect donations"
+    frecuencia: str        # "weekly", "occasional"
     urgencia: str = "media"  # baja | media | alta
+
+
+@dataclass
+class Location:
+    """Where the organization actually is.
+
+    The exchanges in this system are physical: a van drives, a cold room holds
+    food, a classroom fills. Distance is part of whether an exchange makes sense,
+    so the neighborhood is a map rather than a diagram.
+    """
+    lat: float
+    lon: float
+    direccion: str = ""
 
 
 @dataclass
 class OrgProfile:
     org_id: str
     nombre: str
-    tipo: str              # "biblioteca", "banco de alimentos", "escuela"
+    tipo: str              # "library", "food bank", "school"
     descripcion: str
     poblacion_atendida: int = 0   # people reached per year
     recursos: list[Resource] = field(default_factory=list)
     necesidades: list[Need] = field(default_factory=list)
+    ubicacion: Location | None = None
 
     @classmethod
     def from_json(cls, path: str | Path) -> "OrgProfile":
@@ -46,4 +60,5 @@ class OrgProfile:
             poblacion_atendida=data.get("poblacion_atendida", 0),
             recursos=[Resource(**r) for r in data.get("recursos", [])],
             necesidades=[Need(**n) for n in data.get("necesidades", [])],
+            ubicacion=Location(**data["ubicacion"]) if data.get("ubicacion") else None,
         )

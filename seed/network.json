@@ -17,6 +17,24 @@
       "nombre": "San Martin School",
       "endpoint": "http://localhost:9003",
       "port": 9003
+    },
+    {
+      "perfil": "seed/orgs/health_post.json",
+      "nombre": "Riverside Health Post",
+      "endpoint": "http://localhost:9004",
+      "port": 9004
+    },
+    {
+      "perfil": "seed/orgs/kitchen.json",
+      "nombre": "Casa Vecinal Kitchen",
+      "endpoint": "http://localhost:9005",
+      "port": 9005
+    },
+    {
+      "perfil": "seed/orgs/youth_club.json",
+      "nombre": "Eastside Youth Club",
+      "endpoint": "http://localhost:9006",
+      "port": 9006
     }
   ]
 }

@@ -23,9 +23,16 @@
   --edge-top:     rgba(255, 255, 255, 0.06);
 
   /* routes: one per organization, isoluminant so no org outranks another */
+  /* One colour per organization, used for that organization and nothing else.
+     Six now, not three, chosen to stay distinguishable at pin size on the dark
+     ground and to sit in a similar lightness band so no organization reads as
+     more important than another. */
   --route-food:   #ffb599;
   --route-lib:    #75d4ea;
   --route-school: #e3c05f;
+  --route-health: #8ed6a9;
+  --route-kitchen:#d79ad6;
+  --route-youth:  #9fb0f5;
 
   /* states */
   --signed:       #f0e7d6;   /* cream. Only a fully signed agreement. */
@@ -150,12 +157,129 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.82); } }
 
 /* ---------- shell ---------- */
-.shell {
-  max-width: 86rem; margin: 0 auto;
-  padding: var(--s-8) var(--s-6) var(--s-24);
-  display: flex; flex-direction: column; gap: var(--s-12);
+/* ---------- the stage ----------
+   The map is the product, so it holds the viewport and everything else reads as
+   a panel over it. The page used to be a six-thousand-pixel column with the map
+   in section four, which buried the one surface that explains what this is. */
+html, body { height: 100%; }
+body { overflow: hidden; }
+
+.stage {
+  position: absolute; inset: 3.5rem 0 0 0;
 }
-.shell section { scroll-margin-top: 5rem; }
+.stage__map { position: absolute; inset: 0; }
+.stage__map canvas { outline: none; }
+
+.disclosure {
+  position: absolute; right: var(--s-6); top: var(--s-4); z-index: 10;
+  max-width: 30rem; margin: 0;
+  padding: var(--s-3) var(--s-4);
+  background: rgba(9, 20, 33, 0.82);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--rule-soft);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  line-height: 1.6; color: var(--ink-faint);
+}
+
+.panel {
+  position: absolute; left: var(--s-6); top: var(--s-4); bottom: var(--s-4);
+  z-index: 20;
+  width: min(30rem, calc(100vw - 2 * var(--s-6)));
+  display: flex; flex-direction: column;
+  background: rgba(9, 20, 33, 0.93);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+.panel__body { overflow-y: auto; overscroll-behavior: contain; padding: var(--s-6); }
+.panel__body > * + * { margin-top: var(--s-6); }
+
+.views { display: flex; border-bottom: 1px solid var(--rule); flex: none; }
+.view {
+  flex: 1; appearance: none; background: none; border: 0;
+  padding: var(--s-4) var(--s-3);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-faint); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color var(--d-fast) var(--ease-out), border-color var(--d-fast) var(--ease-out);
+}
+.view:hover { color: var(--ink-soft); }
+.view[aria-current="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.view:focus-visible { outline: 2px solid var(--waiting); outline-offset: -2px; }
+
+.view-pane > * + * { margin-top: var(--s-6); }
+.run { display: flex; flex-direction: column; gap: var(--s-3); align-items: flex-start; }
+.feed-block { display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* ---------- pins ---------- */
+.pin {
+  appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: var(--font-ui);
+}
+.pin__disc {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--field); color: var(--ink);
+  border: 2px solid currentColor;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  transition: transform var(--d-fast) var(--ease-out);
+}
+.pin__name {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--ink); white-space: nowrap;
+  padding: 2px 6px;
+  background: rgba(9, 20, 33, 0.86);
+  border: 1px solid var(--rule-soft);
+}
+.pin:hover .pin__disc { transform: scale(1.12); }
+.pin:focus-visible { outline: 2px solid var(--waiting); outline-offset: 4px; }
+.pin--food   { color: var(--route-food); }
+.pin--lib    { color: var(--route-lib); }
+.pin--school { color: var(--route-school); }
+.pin--health { color: var(--route-health); }
+.pin--kitchen{ color: var(--route-kitchen); }
+.pin--youth  { color: var(--route-youth); }
+.pin--hit .pin__disc { animation: station-hit 560ms cubic-bezier(0.23, 1, 0.32, 1); }
+/* A director has something to decide here. This is the only place the map ever
+   asks for a person, which is the answer to "where do I come in". */
+.pin--waiting .pin__disc { box-shadow: 0 0 0 3px rgba(217, 227, 246, 0.28), 0 2px 10px rgba(0,0,0,0.55); }
+.pin--waiting .pin__name { color: var(--field); background: var(--ink); border-color: var(--ink); }
+
+/* ---------- the selected organization ---------- */
+.orgcard { position: relative; background: var(--plate); border: 1px solid var(--rule); padding: var(--s-6); }
+.orgcard--food   { border-left: 0; box-shadow: inset 3px 0 0 var(--route-food); }
+.orgcard--lib    { box-shadow: inset 3px 0 0 var(--route-lib); }
+.orgcard--school { box-shadow: inset 3px 0 0 var(--route-school); }
+.orgcard--health { box-shadow: inset 3px 0 0 var(--route-health); }
+.orgcard--kitchen{ box-shadow: inset 3px 0 0 var(--route-kitchen); }
+.orgcard--youth  { box-shadow: inset 3px 0 0 var(--route-youth); }
+.orgcard__name { margin: var(--s-1) 0 var(--s-2); font-size: var(--t-h3); letter-spacing: -0.015em; }
+.orgcard__desc { margin: var(--s-3) 0 0; color: var(--ink-soft); font-size: var(--t-small); }
+.orgcard__sub { margin-top: var(--s-6); }
+.orgcard__close {
+  position: absolute; top: var(--s-3); right: var(--s-3);
+  appearance: none; background: none; border: 0; padding: var(--s-2);
+  color: var(--ink-faint); cursor: pointer;
+}
+.orgcard__close:hover { color: var(--ink); }
+.dists { list-style: none; margin: var(--s-3) 0 0; padding: 0;
+         display: flex; flex-direction: column; gap: var(--s-2); }
+.dists li { display: flex; align-items: center; gap: var(--s-2);
+            font-size: var(--t-small); color: var(--ink-soft); }
+.dists__n { margin-left: auto; font-family: var(--font-mono);
+            font-size: var(--t-micro); color: var(--ink-faint);
+            font-variant-numeric: tabular-nums; }
+
+/* MapLibre's own furniture, brought into the palette. */
+.maplibregl-ctrl-group { background: var(--plate); border: 1px solid var(--rule); box-shadow: none; }
+.maplibregl-ctrl-group button + button { border-top: 1px solid var(--rule); }
+.maplibregl-ctrl-group button span { filter: invert(1) opacity(0.7); }
+.maplibregl-ctrl-attrib { background: rgba(9, 20, 33, 0.8) !important; }
+.maplibregl-ctrl-attrib a { color: var(--ink-faint) !important; }
 
 .eyebrow {
   font-family: var(--font-mono);
@@ -290,6 +414,9 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .cap--food   { background: var(--route-food); }
 .cap--lib    { background: var(--route-lib); }
 .cap--school { background: var(--route-school); }
+.cap--youth { background: var(--route-youth); }
+.cap--kitchen { background: var(--route-kitchen); }
+.cap--health { background: var(--route-health); }
 .cap--all    { background: transparent; color: var(--ink-soft); border: 1px dashed var(--rule); }
 
 /* alone vs together */
@@ -311,14 +438,14 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
      so when one side wrapped to three lines and the other to one, the two column
      headings of a single agreement sat 27px apart with no shared baseline. */
   gap: var(--s-3) var(--s-4); align-items: start;
-  background: var(--plate); padding: var(--s-5) var(--s-6);
+  background: var(--plate); padding: var(--s-6) var(--s-6);
   font-size: var(--t-small);
 }
 /* The provenance line runs the full width under the row: when it was agreed, who
    signed it, and when. A record meant to be read by a funder needs both. */
 .entry__prov {
   grid-column: 2 / -1;
-  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5);
+  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
   font-family: var(--font-mono); font-size: var(--t-micro);
   color: var(--ink-faint);
   padding-top: var(--s-3);
@@ -359,6 +486,9 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .seal__half--food   { border-color: var(--route-food); }
 .seal__half--lib    { border-color: var(--route-lib); }
 .seal__half--school { border-color: var(--route-school); }
+.seal__half--youth { border-color: var(--route-youth); }
+.seal__half--kitchen { border-color: var(--route-kitchen); }
+.seal__half--health { border-color: var(--route-health); }
 .seal__half--on.seal__half--food   { background: var(--route-food); color: var(--field); }
 .seal__half--on.seal__half--lib    { background: var(--route-lib); color: var(--field); }
 .seal__half--on.seal__half--school { background: var(--route-school); color: var(--field); }
@@ -382,6 +512,9 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .map__route--food   { stroke: var(--route-food); }
 .map__route--lib    { stroke: var(--route-lib); }
 .map__route--school { stroke: var(--route-school); }
+.map__route--youth { stroke: var(--route-youth); }
+.map__route--kitchen { stroke: var(--route-kitchen); }
+.map__route--health { stroke: var(--route-health); }
 .map__ghost { fill: none; stroke: var(--ink-faint); stroke-width: 1.5; stroke-dasharray: 2 10; opacity: 0.5; }
 /* A route carrying a message right now. The line lifts rather than changes
    colour, because colour on this map already means which organization owns the
@@ -403,6 +536,9 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .map__pulse--food   { fill: var(--route-food); }
 .map__pulse--lib    { fill: var(--route-lib); }
 .map__pulse--school { fill: var(--route-school); }
+.map__pulse--youth { fill: var(--route-youth); }
+.map__pulse--kitchen { fill: var(--route-kitchen); }
+.map__pulse--health { fill: var(--route-health); }
 
 .map__station { fill: var(--field); stroke-width: 3.5; }
 .map__label { font-family: var(--font-ui); font-size: 11px; font-weight: 600; fill: var(--ink); letter-spacing: 0.04em; }
@@ -443,6 +579,9 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .dot--food { background: var(--route-food); }
 .dot--lib { background: var(--route-lib); }
 .dot--school { background: var(--route-school); }
+.dot--youth { background: var(--route-youth); }
+.dot--kitchen { background: var(--route-kitchen); }
+.dot--health { background: var(--route-health); }
 
 .empty { padding: var(--s-8) var(--s-4); color: var(--ink-soft); font-size: var(--t-small); }
 .steps { display: flex; flex-direction: column; gap: var(--s-3); margin-top: var(--s-4); }

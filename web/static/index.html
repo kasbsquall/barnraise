@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css?v=13">
+<link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
+<link rel="stylesheet" href="/static/styles.css?v=16">
 </head>
 <body>
 
@@ -29,6 +30,7 @@
     <symbol id="i-check" viewBox="0 0 256 256"><path d="m40 136 56 56L216 72"/></symbol>
     <symbol id="i-x" viewBox="0 0 256 256"><path d="M56 56l144 144M200 56 56 200"/></symbol>
     <symbol id="i-map" viewBox="0 0 256 256"><path d="M96 216 24 184V40l72 32 64-32 72 32v144l-72-32zM96 72v144M160 40v144"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 256 256"><path d="M128 232s88-72 88-136a88 88 0 1 0-176 0c0 64 88 136 88 136Zm0-104a32 32 0 1 0 0-64 32 32 0 0 0 0 64Z"/></symbol>
   </defs>
 </svg>
 
@@ -58,125 +60,126 @@
       <span id="identity-name" aria-live="polite">—</span>
       <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg>
     </button>
-    <div class="live" id="live" data-fase="idle">
+    <div class="live" id="live" data-fase="inactiva">
       <svg class="ico" aria-hidden="true"><use href="#i-live"/></svg>
       <span id="live-text">Agents idle</span>
     </div>
   </div>
 </header>
 
-<p class="disclosure">
-  Demo neighborhood. The three organizations, the funding call and the earlier collaboration
-  history are seeded fixtures. Agreements the agents negotiate in this session are written
-  live, and every eligibility figure is computed from the ledger.
-</p>
+<!-- The map is the product, so it is the surface everything else sits on rather
+     than a panel four screens down. -->
+<main class="stage">
+  <div id="map" class="stage__map" role="img"
+       aria-label="Map of the neighborhood showing six organizations and the routes between them"></div>
 
-<main class="shell">
+  <p class="disclosure">
+    Demo neighborhood. The six organizations and the funding call are invented; the streets and
+    the driving routes between them are real. Agreements the agents negotiate in this session are
+    written live, and every figure is computed from the ledger.
+  </p>
 
-  <!-- 1 · the decision. Why anyone opens this screen. -->
-  <p class="ack" id="ack" role="status" hidden></p>
+  <aside class="panel" id="panel">
+    <nav class="views" aria-label="Views">
+      <button class="view" type="button" data-view="now" aria-current="true"><span>Now</span></button>
+      <button class="view" type="button" data-view="ledger"><span>Ledger</span></button>
+      <button class="view" type="button" data-view="fund"><span>Funding</span></button>
+    </nav>
 
-  <section class="decision" id="decision" hidden role="region" aria-labelledby="decision-h">
-    <div class="decision__head">
-      <svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>
-      <span class="eyebrow eyebrow--alert">Your agent stopped and is waiting for you</span>
-    </div>
-    <div class="decision__body">
-      <h2 id="decision-h" class="decision__title" tabindex="-1">—</h2>
-      <dl class="terms" id="decision-terms"></dl>
-      <div class="decision__actions">
-        <button class="btn btn--primary" id="btn-sign" type="button"><span>Sign</span></button>
-        <button class="btn btn--quiet" id="btn-decline" type="button"><span>Decline</span></button>
-      </div>
-      <p class="decision__note" id="decision-note"></p>
-    </div>
-  </section>
+    <div class="panel__body">
 
-  <section class="allclear" id="allclear" hidden>
-    <svg class="ico ico--lg" aria-hidden="true"><use id="allclear-icon" href="#i-check"/></svg>
-    <div>
-      <p><strong id="allclear-title">Nothing needs you right now.</strong></p>
-      <p class="hint" id="allclear-detail">Your agent is watching for exchanges in the background.</p>
-      <button class="btn btn--small" id="allclear-go" type="button" hidden><span>Go to the entry</span></button>
-    </div>
-  </section>
+      <!-- NOW: what needs a person, what the agents are doing, and whoever is selected -->
+      <section class="view-pane" data-pane="now">
+        <p class="ack" id="ack" role="status" hidden></p>
 
-  <!-- 2 · the money, and what it takes to reach it -->
-  <section class="fund" aria-labelledby="fund-h">
-    <div class="fund__head">
-      <div>
-        <p class="eyebrow">Funding call detected</p>
-        <h2 id="fund-h" class="fund__name" data-fund-name>—</h2>
-        <p class="hint" data-fund-meta></p>
-      </div>
-      <div class="amount">
-        <span class="amount__n" data-fund-amount>—</span>
-        <span class="amount__unit" data-fund-unit></span>
-      </div>
-    </div>
-    <div class="reqs" id="reqs"></div>
-    <div class="alone" id="alone"></div>
-    <div id="coalition"></div>
-  </section>
-
-  <!-- 3 · the ledger, which is the evidence the fund asks for -->
-  <section aria-labelledby="ledger-h">
-    <div class="section-head">
-      <div>
-        <h2 id="ledger-h" class="section-title"><svg class="ico"><use href="#i-seal"/></svg>The Neighborhood Ledger</h2>
-        <p class="hint">No row exists here without both organizations' signatures.</p>
-      </div>
-      <div class="section-head__aside">
-        <p class="label" id="ledger-legend"></p>
-        <button class="btn btn--small" id="btn-export" type="button"><span>Export the ledger</span></button>
-      </div>
-    </div>
-    <ol class="ledger" id="ledger"></ol>
-  </section>
-
-  <!-- 4 · the neighborhood, live -->
-  <section aria-labelledby="net-h">
-    <div class="section-head">
-      <div>
-        <h2 id="net-h" class="section-title"><svg class="ico"><use href="#i-map"/></svg>The neighborhood</h2>
-        <p class="hint">A thicker line means more fulfilled agreements between those two organizations.</p>
-      </div>
-      <div style="display:flex;gap:var(--s-2);flex-wrap:wrap">
-        <button class="btn btn--small" id="btn-round" type="button"><span>Run an exchange round</span></button>
-        
-      </div>
-    </div>
-    <div class="network">
-      <div>
-        <div class="map-wrap">
-          <svg id="map" class="map" viewBox="0 0 560 340" role="img" aria-labelledby="map-desc">
-            <desc id="map-desc">Route diagram of the three organizations and the agreements between them</desc>
-          </svg>
-          <div class="legend" id="map-legend"></div>
+        <div class="decision" id="decision" hidden role="region" aria-labelledby="decision-h">
+          <div class="decision__head">
+            <svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>
+            <span class="eyebrow eyebrow--alert">Your agent stopped and is waiting for you</span>
+          </div>
+          <div class="decision__body">
+            <h2 id="decision-h" class="decision__title" tabindex="-1">—</h2>
+            <dl class="terms" id="decision-terms"></dl>
+            <div class="decision__actions">
+              <button class="btn btn--primary" id="btn-sign" type="button"><span>Sign</span></button>
+              <button class="btn btn--quiet" id="btn-decline" type="button"><span>Decline</span></button>
+            </div>
+            <p class="decision__note" id="decision-note"></p>
+          </div>
         </div>
-        <div class="orgs" id="orgs" style="margin-top:var(--s-8)"></div>
-      </div>
-      <div>
-        <p class="label" style="margin-bottom:var(--s-3)">Activity</p>
-        <ol class="feed" id="feed" role="log" aria-live="polite" aria-label="Agent activity"></ol>
-        <div class="empty" id="feed-empty">
-          <p>The agents work in the background. Run a round to watch them negotiate.</p>
-          <ol class="steps">
-            <li class="step"><span class="step__n">01</span><svg class="ico" aria-hidden="true"><use href="#i-live"/></svg><span>Each agent asks its neighbors what is idle</span></li>
-            <li class="step"><span class="step__n">02</span><svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span>They negotiate concrete terms</span></li>
-            <li class="step"><span class="step__n">03</span><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span>They stop, and both organizations have to sign</span></li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </section>
 
+        <div class="allclear" id="allclear" hidden>
+          <svg class="ico ico--lg" aria-hidden="true"><use id="allclear-icon" href="#i-check"/></svg>
+          <div>
+            <p><strong id="allclear-title">Nothing needs you right now.</strong></p>
+            <p class="hint" id="allclear-detail">Your agent is watching for exchanges in the background.</p>
+            <button class="btn btn--small" id="allclear-go" type="button" hidden><span>Go to the entry</span></button>
+          </div>
+        </div>
+
+        <div class="run">
+          <button class="btn btn--primary" id="btn-round" type="button"><span>Run an exchange round</span></button>
+          <p class="hint">Your agent asks the neighbors what is idle, negotiates terms, and stops for you to sign.</p>
+        </div>
+
+        <!-- the organization the map has selected -->
+        <div id="orgcard" hidden></div>
+
+        <div class="feed-block">
+          <p class="label">Activity</p>
+          <ol class="feed" id="feed" role="log" aria-live="polite" aria-label="Agent activity"></ol>
+          <div class="empty" id="feed-empty">
+            <p>The agents work in the background. Run a round to watch them negotiate.</p>
+            <ol class="steps">
+              <li class="step"><span class="step__n">01</span><svg class="ico" aria-hidden="true"><use href="#i-live"/></svg><span>Each agent asks its neighbors what is idle</span></li>
+              <li class="step"><span class="step__n">02</span><svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span>They negotiate concrete terms</span></li>
+              <li class="step"><span class="step__n">03</span><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span>They stop, and both organizations have to sign</span></li>
+            </ol>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- LEDGER: the evidence -->
+      <section class="view-pane" data-pane="ledger" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="section-title"><svg class="ico"><use href="#i-seal"/></svg>The Neighborhood Ledger</h2>
+            <p class="hint">No row exists here without both organizations' signatures.</p>
+          </div>
+          <div class="section-head__aside">
+            <p class="label" id="ledger-legend"></p>
+            <button class="btn btn--small" id="btn-export" type="button"><span>Export the ledger</span></button>
+          </div>
+        </div>
+        <ol class="ledger" id="ledger"></ol>
+      </section>
+
+      <!-- FUNDING: the money and who can reach it -->
+      <section class="view-pane" data-pane="fund" hidden>
+        <div class="fund__head">
+          <div>
+            <p class="eyebrow">Funding call detected</p>
+            <h2 class="fund__name" data-fund-name>—</h2>
+            <p class="hint" data-fund-meta></p>
+          </div>
+          <div class="amount">
+            <span class="amount__n" data-fund-amount>—</span>
+            <span class="amount__unit" data-fund-unit></span>
+          </div>
+        </div>
+        <div class="reqs" id="reqs"></div>
+        <div class="alone" id="alone"></div>
+        <div id="coalition"></div>
+      </section>
+
+    </div>
+  </aside>
 </main>
 
-<footer class="foot">
-  Barnraise · Strands Agents · A2A, the agent-to-agent protocol, between organizations · human approval at two points
-</footer>
-
-<script src="/static/app.js?v=13"></script>
+<script src="/static/vendor/maplibre-gl.js"></script>
+<script src="/static/app.js?v=15"></script>
+<script src="/static/neighborhood.js?v=15"></script>
+<script>window.__boot && window.__boot();</script>
 </body>
 </html>

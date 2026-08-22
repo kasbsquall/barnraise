@@ -1,0 +1,40 @@
+{
+  "org_id": "riverside-health-post",
+  "nombre": "Riverside Health Post",
+  "tipo": "health post",
+  "descripcion": "Small community clinic. Runs nurse-led health talks and a vaccination programme. Two nurses and a part-time doctor.",
+  "poblacion_atendida": 620,
+  "ubicacion": {
+    "lat": 41.859,
+    "lon": -87.6497,
+    "direccion": "1401 W Cullerton St"
+  },
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "nurse-led health talks for community groups",
+      "disponibilidad": "Wednesday mornings",
+      "notas": "nutrition, first aid and child health, up to 25 people"
+    },
+    {
+      "id": "R2",
+      "nombre": "vaccine cold chain fridge with spare shelves",
+      "disponibilidad": "Monday to Friday",
+      "notas": "audited daily, holds 40 litres above what we use"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "a van for home visits to patients who cannot travel",
+      "frecuencia": "weekly",
+      "urgencia": "alta"
+    },
+    {
+      "id": "N2",
+      "descripcion": "a larger room for group health sessions",
+      "frecuencia": "monthly",
+      "urgencia": "media"
+    }
+  ]
+}

@@ -31,5 +31,10 @@
       "frecuencia": "weekly",
       "urgencia": "alta"
     }
-  ]
+  ],
+  "ubicacion": {
+    "lat": 41.854,
+    "lon": -87.6606,
+    "direccion": "2040 W 21st Pl"
+  }
 }

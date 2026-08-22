@@ -1,0 +1,40 @@
+{
+  "org_id": "eastside-youth-club",
+  "nombre": "Eastside Youth Club",
+  "tipo": "youth club",
+  "descripcion": "After-school and weekend sports club for 11 to 17 year olds. Four coaches and a small board.",
+  "poblacion_atendida": 410,
+  "ubicacion": {
+    "lat": 41.8524,
+    "lon": -87.6521,
+    "direccion": "1120 W 22nd Pl"
+  },
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "twelve-seat minibus",
+      "disponibilidad": "Saturdays and Sundays",
+      "notas": "used for away matches, idle most weekends in term time"
+    },
+    {
+      "id": "R2",
+      "nombre": "gym hall with changing rooms",
+      "disponibilidad": "weekday mornings",
+      "notas": "400 square metres, free until the after-school session at 4pm"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "refreshments and healthy snacks for match days",
+      "frecuencia": "weekly",
+      "urgencia": "alta"
+    },
+    {
+      "id": "N2",
+      "descripcion": "volunteers to tutor members falling behind at school",
+      "frecuencia": "weekly",
+      "urgencia": "media"
+    }
+  ]
+}
