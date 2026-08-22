@@ -16,6 +16,9 @@ const ROUTE = {
 const routeOf = (orgId) => ROUTE[orgId] || "lib";
 
 const REDUCE = matchMedia("(prefers-reduced-motion: reduce)");
+// Sampled once at parse time meant a viewer who turned reduced motion on kept
+// getting animation until they reloaded.
+REDUCE.addEventListener?.("change", () => { if (state) render(); });
 
 /* Entry motion is transform only: a frozen fade would leave a row invisible
    forever if the document timeline stalls. */
@@ -198,7 +201,7 @@ function renderFund() {
         : who.split(", ").map((o) => `<span class="cap cap--${routeOf(o)}">${initials(o)}</span>`).join("");
     row.innerHTML =
       `<span class="req__id">${esc(r.id)}</span>` +
-      `<span>${esc(r.descripcion)}${r.tipo === "colaboracion" ? ' <span class="label">only Barnraise can prove this</span>' : ""}</span>` +
+      `<span>${esc(r.descripcion)}${r.tipo === "colaboracion" ? ' <span class="label">this is what the ledger is for</span>' : ""}</span>` +
       `<span class="req__who">${caps}</span>`;
     reqs.append(row);
   });
@@ -233,11 +236,13 @@ function renderCoalition() {
   const c = state.coaliciones[0];
   if (!c) {
     const wrap = el("div", "empty");
+    wrap.dataset.coalitionHost = "1";
     wrap.innerHTML =
       `<p>No single organization qualifies for this fund. Ask the coalition agent to ` +
       `check the neighborhood's combined capabilities.</p>`;
     const b = el("button", "btn btn--small");
     b.type = "button";
+    b.dataset.coalition = "1";      // the one button that renderPhase disables
     b.style.marginTop = "var(--s-4)";
     b.textContent = "Look for a coalition";
     b.addEventListener("click", startCoalition);
@@ -276,7 +281,7 @@ function renderCoalition() {
     row.innerHTML =
       `<span class="cap cap--${routeOf(org)}">${initials(org)}</span>` +
       `<span><strong>${esc(nameOf(org))}</strong><br><span class="entry__what">${esc(clean(roles[org] || "role to be set"))}</span></span>` +
-      `<span class="req__who mono">${(amounts[org] || 0).toLocaleString("en-US")} ${esc(state.convocatoria.moneda)}` +
+      `<span class="req__who mono">${amounts[org] ? amounts[org].toLocaleString("en-US") + " " : ""} ${esc(state.convocatoria.moneda)}` +
       (alreadySigned ? ` ${icon("check")}` : "") + `</span>`;
     if (!alreadySigned && c.estado === "propuesta" && org === me) {
       const b = el("button", "btn btn--small");
@@ -297,6 +302,50 @@ function renderCoalition() {
   ev.style.padding = "var(--s-4) var(--s-6) var(--s-8)";
   ev.textContent = `Evidence attached: ${c.evidencia.split("\n")[0]}`;
   box.append(ev);
+}
+
+/**
+ * Writes the ledger out as CSV.
+ *
+ * The product's stated output is evidence for a grant application, and until now
+ * that evidence could not leave the browser. A grant officer needs the date, the
+ * two parties, what each gave, what happened, and who signed. All of it was
+ * already in the database.
+ */
+function exportLedger() {
+  const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const head = ["entry", "agreed", "state", "gives", "resource given",
+                "gives back", "resource returned", "conditions", "outcome",
+                "signed by", "signed on"];
+  const rows = [...state.acuerdos].sort((a, b) => a.id - b.id).map((a) => {
+    const sigs = state.firmas_acuerdo
+      .filter((f) => f.acuerdo_id === a.id && f.decision === "aprobado");
+    return [
+      a.id, a.fecha, a.estado,
+      nameOf(a.org_proveedora), a.recurso_entregado,
+      nameOf(a.org_solicitante), a.recurso_recibido,
+      a.condiciones, a.resultado || "",
+      sigs.map((f) => `${f.aprobador} (${nameOf(f.org_id)})`).join("; "),
+      sigs.map((f) => f.fecha).sort().slice(-1)[0] || "",
+    ].map(cell).join(",");
+  });
+  const csv = [head.map(cell).join(","), ...rows].join(String.fromCharCode(13, 10));
+  const url = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8"}));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "neighborhood-ledger.csv";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** A date a person can read, from the ISO string the ledger stores. */
+function shortDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
+  return d.toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"});
 }
 
 /* --- the ledger --- */
@@ -335,6 +384,23 @@ function renderLedger() {
     enter(item, i);
 
     const parties = [a.org_proveedora, a.org_solicitante];
+
+    // A record whose stated purpose is evidence for a funding application needs
+    // to say when it was agreed and who signed it. Both were already in the
+    // database and neither reached the page: the ledger showed two initials in a
+    // capsule whose meaning was only in a mouse-only tooltip.
+    const signedBy = parties
+      .map((org) => state.firmas_acuerdo.find(
+        (f) => f.acuerdo_id === a.id && f.org_id === org && f.decision === "aprobado"))
+      .filter(Boolean);
+    const lastSig = signedBy.map((f) => f.fecha).sort().slice(-1)[0];
+    const STATE_WORD = {
+      propuesto: "awaiting a signature",
+      aprobado: "signed, not yet delivered",
+      cumplido: "delivered",
+      rechazado: "declined",
+    };
+
     const seals = parties.map((org) => {
       const sig = state.firmas_acuerdo.find((f) => f.acuerdo_id === a.id && f.org_id === org);
       const on = sig && sig.decision === "aprobado" ? " seal__half--on" : "";
@@ -350,7 +416,16 @@ function renderLedger() {
       `<span class="entry__side"><span class="entry__org">${esc(nameOf(a.org_solicitante))}</span> gives back<br>` +
         `<span class="entry__what">${esc(a.recurso_recibido)}</span>` +
         `<span class="entry__meta">${esc(a.condiciones)}${a.resultado ? " · " + esc(a.resultado) : ""}</span></span>` +
-      `<span class="entry__sign"><span class="seal">${seals}</span></span>`;
+      `<span class="entry__sign">` +
+        `<span class="entry__state">${esc(STATE_WORD[a.estado] || a.estado)}</span>` +
+        `<span class="seal">${seals}</span></span>` +
+      `<span class="entry__prov">` +
+        `<span>${esc(shortDate(a.fecha))}</span>` +
+        (signedBy.length
+          ? `<span>signed by ${esc(signedBy.map((f) => f.aprobador).join(" and "))}` +
+            (lastSig ? ` · ${esc(shortDate(lastSig))}` : "") + `</span>`
+          : `<span>not signed yet</span>`) +
+      `</span>`;
 
     if (a.estado === "propuesto") {
       const missing = parties.filter(
@@ -390,10 +465,23 @@ function renderLedger() {
 }
 
 /* --- the map: a route diagram, drawn at 45 and 90 degrees only --- */
+// Each station also declares where its two labels go, chosen to point AWAY from
+// the legs that leave it. Both labels used to sit directly under the node on a
+// fixed offset, which put "SERVES 480" on top of the coral vertical and cut the
+// first and last glyph of the other two. A transit diagram with a line drawn
+// through its own data is the one thing this map cannot afford.
 const STATIONS = {
-  "north-food-bank":  { x: 280, y: 80,  anchor: "middle", dy: -24 },
-  "central-library":  { x: 150, y: 250, anchor: "end",    dy: -24 },
-  "san-martin-school":{ x: 410, y: 250, anchor: "start",  dy: -24 },
+  "north-food-bank":  { x: 280, y: 80,  anchor: "middle", dy: -30, sdy: -48, sdx: 0 },
+  "central-library":  { x: 150, y: 250, anchor: "end",    dy: -26, sdy: -4,  sdx: -22 },
+  "san-martin-school":{ x: 410, y: 250, anchor: "start",  dy: -26, sdy: -4,  sdx: 22 },
+};
+// Where along each leg its agreement count sits, and how far to push it off the
+// line. Two labels parked at their own midpoints met at the shared corner under
+// the food bank and read as one run-on string.
+const LINK_LABEL = {
+  "central-library|north-food-bank":   { at: 0.34, dx: -16, dy: -10 },
+  "north-food-bank|san-martin-school": { at: 0.34, dx: 16,  dy: -10 },
+  "central-library|san-martin-school": { at: 0.5,  dx: 0,   dy: 18 },
 };
 const ROUTE_PATH = {
   "central-library|north-food-bank":  "M280,80 V150 L180,250 H150",
@@ -500,8 +588,10 @@ function renderMap() {
       line.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
         { duration: 620, delay: 120 + i * 90, easing: "cubic-bezier(0.23,1,0.32,1)" });
     }
-    const mid = line.getPointAtLength(line.getTotalLength() / 2);
-    add("text", { x: mid.x, y: mid.y - 16, "text-anchor": "middle", class: "map__meta" },
+    const place = LINK_LABEL[key] || { at: 0.5, dx: 0, dy: -16 };
+    const at = line.getPointAtLength(line.getTotalLength() * place.at);
+    add("text", { x: at.x + place.dx, y: at.y + place.dy, "text-anchor": "middle",
+                  class: "map__meta" },
         `${v.acuerdos} agreement${v.acuerdos === 1 ? "" : "s"}`);
   });
 
@@ -512,7 +602,8 @@ function renderMap() {
                     stroke: `var(--route-${routeOf(o.org_id)})` });
     add("text", { x: p.x, y: p.y + p.dy, "text-anchor": p.anchor, class: "map__label" },
         o.nombre.toUpperCase());
-    add("text", { x: p.x, y: p.y + 26, "text-anchor": p.anchor, class: "map__meta" },
+    add("text", { x: p.x + (p.sdx || 0), y: p.y + (p.sdy ?? 26),
+                  "text-anchor": p.anchor, class: "map__meta" },
         `SERVES ${o.poblacion.toLocaleString("en-US")}`);
   });
 
@@ -564,7 +655,7 @@ function renderPhase(fase) {
   bar.dataset.fase = fase;
   $("#live-text").textContent = PHASE[fase] || fase;
   const busy = fase !== "idle" && fase !== "inactiva";
-  [$("#btn-round"), $("#btn-coalition")].forEach((b) => {
+  [$("#btn-round"), ...document.querySelectorAll("[data-coalition]")].forEach((b) => {
     if (busy) { b.setAttribute("aria-disabled", "true"); b.title = "A round is already running"; }
     else { b.removeAttribute("aria-disabled"); b.removeAttribute("title"); }
   });
@@ -582,6 +673,30 @@ const TERM_LABEL = {
 };
 const TERM_ORDER = ["contraparte_org_id", "recurso_recibido", "recurso_entregado",
                     "condiciones", "necesidad_cubierta", "org_ids", "roles", "presupuesto"];
+
+/**
+ * Drops clauses a field just repeats from the fields above it.
+ *
+ * The model tends to write CONDITIONS by concatenating what we receive and what
+ * we give, so the hero card of the signature flow asked a director to read the
+ * same two sentences twice and work out whether the second copy added anything.
+ * Usually only one clause was new.
+ */
+function sinEco(key, args) {
+  const value = clean(String(args[key] ?? ""));
+  if (key !== "condiciones") return value;
+  const above = ["recurso_recibido", "recurso_entregado"]
+    .map((k) => clean(String(args[k] ?? "")).toLowerCase().trim())
+    .filter((t) => t.length > 12);
+  const kept = value
+    .split(/;|\.\s+/)
+    .map((c) => c.trim())
+    .filter((c) => c && !above.some((t) => {
+      const low = c.toLowerCase();
+      return low.includes(t) || t.includes(low);
+    }));
+  return kept.length ? kept.join(". ") : value;
+}
 
 function renderPending(pending) {
   const zone = $("#decision");
@@ -659,7 +774,7 @@ function renderPending(pending) {
     const dt = el("dt", "term__k");
     dt.textContent = TERM_LABEL[k] || k;
     const dd = el("dd", "term__v");
-    dd.textContent = k === "contraparte_org_id" ? nameOf(args[k]) : clean(String(args[k]));
+    dd.textContent = k === "contraparte_org_id" ? nameOf(args[k]) : sinEco(k, args);
     row.append(dt, dd);
     box.append(row);
   });
@@ -679,6 +794,13 @@ function renderPending(pending) {
 function acknowledge(what, needsOther) {
   const z = $("#ack");
   z.hidden = false;
+  // The confirmation lived at the top of the document while the action that
+  // produced it happened a screen and a half below, so a keyboard user signed an
+  // agreement between two institutions and got no visible response at all.
+  // .ack has carried a scroll-margin-top the whole time for a call nobody wrote.
+  requestAnimationFrame(() => {
+    z.scrollIntoView({block: "nearest", behavior: REDUCE.matches ? "auto" : "smooth"});
+  });
   z.className = "ack";
   z.innerHTML = `${icon("check")}<span>${esc(what)}${needsOther ? " It still needs the other organization's signature to become active." : ""}</span>`;
 }
@@ -782,6 +904,10 @@ function addEvent(ev, live = false) {
 function connect() {
   const src = new EventSource("/api/stream");
   src.onmessage = (m) => { try { addEvent(JSON.parse(m.data), true); } catch (_) {} };
+  // A reconnect that does not resync is a page that looks live and is not:
+  // everything published during the gap is gone, and the header keeps claiming
+  // whatever phase it last heard about.
+  src.onopen = () => { if (state) load().catch(() => {}); };
   src.onerror = () => { src.close(); setTimeout(connect, 3000); };
 }
 
@@ -840,10 +966,17 @@ $("#identity").addEventListener("click", () => {
   render();
 });
 
+$("#btn-export").addEventListener("click", exportLedger);
 $("#btn-round").addEventListener("click", startRound);
-$("#btn-coalition").addEventListener("click", startCoalition);
+
 $("#btn-sign").addEventListener("click", () => decide("aprobado"));
-$("#btn-decline").addEventListener("click", () => decide("rechazado"));
+$("#btn-decline").addEventListener("click", () => {
+  // Declining writes 'rechazado' and no view offers a way back to a declined
+  // agreement, so the destructive half of the pair was the half with no copy.
+  if (!confirm("Decline this agreement? Nothing is written to the ledger and the "
+           + "agents do not come back to it. This cannot be undone.")) return;
+  decide("rechazado");
+});
 
 document.querySelectorAll(".shell section").forEach((s, i) => s.style.setProperty("--b", i));
 

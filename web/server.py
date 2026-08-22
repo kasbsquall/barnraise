@@ -209,7 +209,25 @@ class DecisionRequest(BaseModel):
 async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
     if req.decision not in ("aprobado", "rechazado"):
         raise HTTPException(400, "Invalid decision.")
-    aprobador = DIRECTORES.get(req.org_id, "Direccion")
+    # Only a party to the agreement may decide it. The interrupt path already
+    # refused a signature from the wrong organization and this one did not, so
+    # the ledger button was gated in the browser and nowhere else.
+    conn = book.connect()
+    try:
+        fila = conn.execute(
+            "SELECT org_solicitante, org_proveedora FROM acuerdos WHERE id = ?",
+            (acuerdo_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+    if fila is None:
+        raise HTTPException(404, f"There is no agreement #{acuerdo_id}.")
+    if req.org_id not in (fila["org_solicitante"], fila["org_proveedora"]):
+        raise HTTPException(
+            403,
+            f"{req.org_id} is not a party to agreement #{acuerdo_id} and cannot sign it.",
+        )
+    aprobador = DIRECTORES.get(req.org_id, "Director")
     conn = book.connect()
     try:
         estado = book.registrar_aprobacion(
@@ -233,7 +251,7 @@ async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
 async def decidir_coalicion(coalicion_id: int, req: DecisionRequest) -> dict:
     if req.decision not in ("aprobado", "rechazado"):
         raise HTTPException(400, "Invalid decision.")
-    aprobador = DIRECTORES.get(req.org_id, "Direccion")
+    aprobador = DIRECTORES.get(req.org_id, "Director")
     conn = book.connect()
     try:
         estado = book.aprobar_coalicion(

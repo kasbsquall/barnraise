@@ -28,8 +28,11 @@ CONTEXT = ("[N2] refreshments for pupils on extended school days. "
 OWN = ["student volunteers community service programme Friday afternoons",
        "large classroom for 40 people fit for training Saturday mornings"]
 
+KNOWN = ["north-food-bank", "central-library", "san-martin-school"]
+
 record = build_ledger_tools(
     "san-martin-school", contexto_esperado=CONTEXT, recursos_propios=OWN,
+    vecinos_validos=KNOWN,
 )[0]._tool_func
 
 
@@ -94,6 +97,23 @@ check("the negotiated day is accepted",
 print("\nCase 6: our own resource still passes, so the guard is not blanket-refusing")
 ok, _ = filed(**{**base, "recurso_entregado": "student volunteers for the food drive"})
 check("filed", ok, True)
+
+print("\nCase 7: the field that decides WHO must sign is checked")
+# This one had no guard at all while every other field had one. A display name
+# where an id belongs writes a row that looks signed, can never be completed by
+# any console, and is silently dropped from the collaboration evidence it was
+# written to become.
+answer = record(**{**base, "contraparte_org_id": "Central Library"})
+check("a display name is refused", not answer.startswith("Nothing was filed"), False)
+check("the reason asks for an id", "id" in answer.lower(), True)
+
+answer = record(**{**base, "contraparte_org_id": "san-martin-school"})
+check("an agreement with ourselves is refused",
+      not answer.startswith("Nothing was filed"), False)
+
+answer = record(**{**base, "contraparte_org_id": "north-food-bank"})
+check("a real neighbor id still passes",
+      not answer.startswith("Nothing was filed"), True)
 
 book.DB_PATH.unlink(missing_ok=True)
 print(f"\n{'ALL OK' if not failures else 'FAILURES: ' + ', '.join(failures)}")

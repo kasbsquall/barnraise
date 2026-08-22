@@ -48,8 +48,8 @@ are one cycle, not two features.
 
 An organization's data never crosses the wire as a data structure. Tools are
 built as closures over one `OrgProfile`, so an agent has no tool that returns
-another organization's resources or needs, and in a round each organization runs
-in its own process. What crosses the A2A boundary is only
+another organization's resources or needs, and the organizations an agent talks to run in
+their own processes, reached over the network. What crosses the A2A boundary is only
 the message the agent chose to write.
 
 ```python
@@ -77,9 +77,15 @@ against the agreement that approval just wrote. Recording it later, at the end o
 the round, tied the signature to whatever the last decision happened to be, which
 left an approved agreement unsigned while the interface said otherwise.
 
-A director can only decide their own organization's pause. The server rejects a
-signature that arrives under a different organization, so the two-signature rule
-does not depend on the interface being used as intended.
+A director can only decide their own organization's pause, and the server rejects
+a signature that arrives under a different organization or from an organization
+that is not a party to the agreement.
+
+What this does NOT do is authenticate anyone. There is no session and no token:
+the signing organization is a field in the request, so the checks stop the
+interface from doing the wrong thing and would not stop a determined caller with
+an HTTP client. The ledger's two-signature state machine is sound; establishing
+who is speaking to it is the piece a real deployment still needs.
 
 ## Deterministic guards around the model
 
@@ -89,8 +95,9 @@ before it is written:
 
 | Guard | Rejects |
 |---|---|
-| Placeholder check | Empty fields, `N/A`, `Nada` |
-| Coherence check | A received resource unrelated to the need being covered |
+| Placeholder check | Empty fields, `N/A`, `TBD`, and anything under four characters |
+| Counterparty check | An org id that is not a known organization, or ourselves |
+| Coherence check | A received resource sharing no substantive word with the need or the neighbor's offer |
 | Direction check | Giving away a resource the organization does not own |
 | Calendar check | A weekday nobody negotiated |
 | Coalition roles | Crediting an organization with a requirement it does not cover |
@@ -109,8 +116,10 @@ puts the need and the resource side by side for exactly that reason. A round
 whose negotiation drifts to a different need closes with a human declining it,
 not with a check catching it.
 
-Eligibility itself is plain code, not model reasoning: whether a coalition meets
-a population threshold or covers a required capability is a fact.
+Eligibility is computed in plain code rather than by the model, and the profile
+list is deduplicated before anything is summed, because the same organization
+named twice used to double the population it serves against a population
+threshold.
 
 ## Components
 

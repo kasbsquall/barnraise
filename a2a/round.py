@@ -105,8 +105,10 @@ def main() -> None:
         me,
         extra_tools=build_ledger_tools(
             me.org_id,
-            contexto_esperado=f"{need.descripcion}. El vecino ofrecio: {oferta}",
+            contexto_esperado=f"{need.descripcion}. The neighbor offered: {oferta}",
             recursos_propios=[f"{r.nombre} {r.disponibilidad} {r.notas}" for r in me.recursos],
+            necesidad=f"[{need.id}] {need.descripcion}",
+            vecinos_validos=[p.org_id for p in perfiles],
         ),
         interventions=[approval_gate()],
     )

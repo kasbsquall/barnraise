@@ -152,7 +152,12 @@ funding call scanned against the neighborhood's combined capabilities.
 
 A director only ever sees their own organization's decision. Viewing the console
 as someone else shows that a neighbor is deciding, and the server refuses a
-signature that does not come from the organization the pause belongs to.
+signature from an organization that is not a party to the agreement.
+
+There is no authentication behind that: the signing organization is a field in
+the request, so the check constrains the interface and not an arbitrary caller.
+Who is allowed to speak for an organization is the piece a real deployment needs
+and this prototype does not have.
 
 ### Command line
 
@@ -218,6 +223,12 @@ python validation/test_signature.py
 python validation/test_guards.py
 ```
 
+```bash
+python validation/test_isolation.py
+```
+
+`test_isolation` proves an agent's tools return only its own organization's data,
+and that two organizations answer the same call differently.
 `test_seed` proves every seeded need has a counterpart in another organization.
 `test_ledger` proves a single signature never approves an agreement.
 `test_approval` proves the ledger stays empty while the agent waits for a human.

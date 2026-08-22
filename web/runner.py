@@ -5,6 +5,7 @@ waits: the thread blocks on an Event until a director decides in the UI.
 """
 import json
 import sys
+import os
 import threading
 import time
 from pathlib import Path
@@ -37,6 +38,10 @@ _lock = threading.Lock()
 _ocupado = False
 _fase = "inactiva"
 _pendiente: dict | None = None
+
+# How long a paused agent waits for a human before giving up. Long enough for a
+# demo and a coffee, short enough that an abandoned tab does not wedge the app.
+ESPERA_HUMANA = float(os.getenv("BARNRAISE_APPROVAL_TIMEOUT", "900"))
 
 
 class PermisoDeFirma(RuntimeError):
@@ -88,10 +93,23 @@ def _esperar_decision(titulo: str, herramienta: str, argumentos: dict, org_id: s
         "org_id": org_id,
     }
     events.publicar("aprobacion_requerida", **_pendiente)
-    _decision_evento.wait()
+    # A pause that waits forever is a demo that ends on the first misclick: close
+    # the tab while an agent is paused and the worker thread parks with the round
+    # marked busy, so every later round returns 409 until the process restarts.
+    # An unanswered decision is a decision not to sign.
+    if not _decision_evento.wait(timeout=ESPERA_HUMANA):
+        _pendiente = None
+        global _ultima_decision
+        _ultima_decision = "no"
+        events.publicar(
+            "aprobacion_expirada",
+            mensaje=f"Nobody answered within {int(ESPERA_HUMANA // 60)} minutes. "
+                    "Nothing was written.",
+        )
+        events.publicar("aprobacion_resuelta", decision="no")
+        return "no"
     _pendiente = None
     decision = _decision_valor
-    global _ultima_decision
     _ultima_decision = decision
     events.publicar("aprobacion_resuelta", decision=decision)
     return decision
@@ -286,6 +304,7 @@ def ronda_intercambio(org_id: str) -> None:
                 contexto_esperado=f"{need.descripcion}. The neighbor offered: {oferta}",
                 recursos_propios=[f"{r.nombre} {r.disponibilidad} {r.notas}" for r in me.recursos],
                 necesidad=f"[{need.id}] {need.descripcion}",
+                vecinos_validos=list(perfiles),
             ),
             interventions=[approval_gate()],
         )

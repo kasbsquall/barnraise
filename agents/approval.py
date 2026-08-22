@@ -55,6 +55,7 @@ def build_ledger_tools(
     contexto_esperado: str = "",
     recursos_propios: list[str] | None = None,
     necesidad: str = "",
+    vecinos_validos: list[str] | None = None,
 ) -> list:
     """contexto_esperado: the need being covered plus what the neighbor offered.
     recursos_propios: our own idle resources.
@@ -69,6 +70,7 @@ def build_ledger_tools(
     for it to drift, so the ledger records the known need."""
     esperado_kw = _sustantivo(contexto_esperado) if contexto_esperado else set()
     propios_kw = [k for k in (_sustantivo(r) for r in (recursos_propios or [])) if k]
+    conocidos = set(vecinos_validos or [])
 
     @tool
     def record_agreement(
@@ -93,6 +95,20 @@ def build_ledger_tools(
             "condiciones": condiciones,
             "necesidad_cubierta": necesidad_cubierta,
         }
+        # The one field that decides WHO must sign had no check at all. Every other
+        # field was validated while this one went straight into the ledger, and it
+        # is the field that sets `partes`. A model that writes the display name
+        # "Central Library" instead of the id "central-library" produces a row that
+        # looks signed, can never be completed by any console, and is silently
+        # dropped from the collaboration evidence it was written to become.
+        if conocidos and contraparte_org_id not in conocidos:
+            return (
+                f"Nothing was filed. '{contraparte_org_id}' is not an organization id. "
+                f"Use one of: {sorted(conocidos)}. These are ids, not display names."
+            )
+        if contraparte_org_id == org_id:
+            return "Nothing was filed. An organization cannot make an agreement with itself."
+
         vacios = [nombre for nombre, valor in campos.items() if _es_placeholder(valor)]
         if vacios:
             return (

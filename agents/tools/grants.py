@@ -65,6 +65,14 @@ def evaluar(
     conn=None,
 ) -> Evaluacion:
     """Check a coalition (one or more orgs) against every requirement."""
+    # Deduplicate before counting anything. The same organization listed twice
+    # doubled the population it serves, and REQ1 is a population threshold, so a
+    # repeated id was arithmetic that let a single org clear a bar meant for three.
+    vistos: dict[str, OrgProfile] = {}
+    for p in profiles:
+        vistos.setdefault(p.org_id, p)
+    profiles = list(vistos.values())
+
     org_ids = [p.org_id for p in profiles]
     poblacion_total = sum(p.poblacion_atendida for p in profiles)
     capacidades = {p.org_id: _capacidades(p) for p in profiles}

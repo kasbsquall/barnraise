@@ -30,8 +30,14 @@
   /* states */
   --signed:       #f0e7d6;   /* cream. Only a fully signed agreement. */
   --signed-ink:   #1b2430;
-  --waiting:      #ffb599;
-  --ok:           #7fd6a2;
+  /* Attention and success are carried by INK and elevation, not by hue.
+     --waiting used to be the same value as --route-food, so coral meant both
+     "North Food Bank" and "this needs you", and both appeared in the same
+     500px strip of the header meaning different things. --ok was a fourth
+     accent nobody declared. The system now has exactly three chromatic
+     identities, one for each organization, plus cream for a signed agreement. */
+  --waiting:      #f2f6ff;
+  --ok:           #f2f6ff;
   --danger:       #ffb4ab;
 
   --font-ui:   "Archivo Narrow", "Archivo", "Segoe UI", sans-serif;
@@ -131,8 +137,16 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
   text-transform: uppercase; letter-spacing: 0.1em;
   color: var(--ink-faint); white-space: nowrap;
 }
-.live[data-fase]:not([data-fase="idle"]) { color: var(--waiting); }
-.live[data-fase]:not([data-fase="idle"]) .ico { animation: pulse 1.8s var(--ease-move) infinite; }
+/* The server's idle phase is "inactiva", not "idle", so this selector matched
+   from the first state response onward and the icon pulsed permanently. On
+   mobile, where the text is hidden, a forever-pulsing icon was the only status
+   signal the page had, and it always said a round was running. */
+.live[data-fase]:not([data-fase="idle"]):not([data-fase="inactiva"]) { color: var(--waiting); }
+.live[data-fase]:not([data-fase="idle"]):not([data-fase="inactiva"]) .ico { animation: pulse 1.8s var(--ease-move) infinite; }
+/* The status chip is the longest string in the header. Without a floor it grew
+   into the frame bleed: "NEGOTIATING TERMS" landed 6px from the edge of a 1920
+   render, inside the title-safe area any player with overscan will clip. */
+.live { min-width: 15.5rem; justify-content: flex-end; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.82); } }
 
 /* ---------- shell ---------- */
@@ -163,7 +177,7 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
   border-bottom: 1px solid var(--rule);
   margin-bottom: var(--s-6);
 }
-.section-title {
+.section-title { scroll-margin-top: 5.5rem;
   display: flex; align-items: center; gap: var(--s-3);
   font-size: var(--t-h3); letter-spacing: -0.01em;
 }
@@ -171,7 +185,7 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- decision: the reason anyone opens this screen ---------- */
 .decision {
-  border: 1px solid var(--waiting);
+  border: 1px solid rgba(217, 227, 246, 0.34);
   background: var(--plate);
   box-shadow: inset 0 1px 0 var(--edge-top);
 }
@@ -229,7 +243,11 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .btn:focus-visible { outline: 2px solid var(--waiting); outline-offset: 2px; }
 .btn[aria-disabled="true"] { color: var(--ink-faint); background: var(--plate-low); cursor: wait; }
 
-.btn--primary { background: var(--signed); color: var(--signed-ink); border-color: var(--signed); }
+/* Not cream. Cream is the one reserved colour in this system and it means an
+   agreement both organizations signed; putting it on the button that STARTS a
+   signature made it mean the act as well as the result, in the same frame. */
+.btn--primary { background: var(--ink); color: var(--field); border-color: var(--ink); }
+.btn--primary:hover { background: #eef3ff; border-color: #eef3ff; }
 .btn--primary:hover { background: #fff6e8; border-color: #fff6e8; }
 .btn--small { padding: 0.5rem 0.75rem; min-height: 40px; font-size: var(--t-micro); }
 .btn--quiet { background: transparent; }
@@ -287,19 +305,45 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 /* ---------- ledger ---------- */
 .ledger { display: grid; gap: var(--gutter); background: var(--rule-soft); }
 .entry {
-  display: grid; grid-template-columns: 4rem minmax(0, 1fr) minmax(0, 1fr) 9rem;
-  gap: var(--s-4); align-items: center;
-  background: var(--plate); padding: var(--s-4) var(--s-6);
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) minmax(0, 1fr) 11rem;
+  /* start, not center. Each half of a row used to be centred inside its own cell,
+     so when one side wrapped to three lines and the other to one, the two column
+     headings of a single agreement sat 27px apart with no shared baseline. */
+  gap: var(--s-3) var(--s-4); align-items: start;
+  background: var(--plate); padding: var(--s-5) var(--s-6);
   font-size: var(--t-small);
 }
+/* The provenance line runs the full width under the row: when it was agreed, who
+   signed it, and when. A record meant to be read by a funder needs both. */
+.entry__prov {
+  grid-column: 2 / -1;
+  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  color: var(--ink-faint);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule-soft);
+}
+.entry--signed .entry__prov { color: #6b7280; border-top-color: rgba(27, 36, 48, 0.12); }
+.entry__state {
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-faint); text-align: right;
+}
+.entry--signed .entry__state { color: #6b7280; }
+.entry__sign { flex-direction: column; align-items: flex-end; gap: var(--s-2); }
+.section-head__aside { display: flex; align-items: center; gap: var(--s-4); flex-wrap: wrap; }
 /* Cream is the whole colour system in one rule: signed, and nothing else. */
 .entry--signed { background: var(--signed); color: var(--signed-ink); }
 .entry--signed .label, .entry--signed .entry__meta { color: #5c6470; }
 .entry__n { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-faint); }
 .entry--signed .entry__n { color: #5c6470; }
 .entry__side { min-width: 0; }
-.entry__org { font-weight: 600; }
-.entry__what { display: block; font-family: var(--font-mono); font-size: var(--t-micro); opacity: 0.85; }
+.entry__org { font-weight: 600; font-size: var(--t-body); }
+/* Three steps, not six. The row carried six text runs spanning a 1.3x range,
+   so hierarchy inside it was doing nothing and the distinctions vanished
+   entirely at film scale. Organization name, resource, then everything else. */
+.entry__what { display: block; font-family: var(--font-mono); font-size: var(--t-small); opacity: 0.92; margin-top: var(--s-1); }
 .entry__meta { display: block; font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-faint); margin-top: var(--s-2); }
 .entry__sign { display: flex; align-items: center; gap: var(--s-2); justify-content: flex-end; }
 
@@ -324,6 +368,16 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .map-wrap { background: var(--plate-low); border: 1px solid var(--rule); padding: var(--s-4); }
 .map { width: 100%; height: auto; display: block; overflow: visible; }
 .map__grid { stroke: var(--rule-soft); stroke-width: 1; }
+/* Labels are drawn with a halo in the ground colour, the way a printed transit
+   map does it, so a route that must pass behind a label never cuts its glyphs.
+   paint-order puts the stroke under the fill; without it the halo covers the
+   letterform it is meant to protect. */
+.map__label, .map__meta {
+  paint-order: stroke fill;
+  stroke: var(--field);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
 .map__route { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .map__route--food   { stroke: var(--route-food); }
 .map__route--lib    { stroke: var(--route-lib); }
@@ -415,7 +469,7 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .ack {
   display: flex; align-items: center; gap: var(--s-3);
   padding: var(--s-4) var(--s-6);
-  background: var(--plate-high); border: 1px solid var(--ok);
+  background: var(--plate-high); border: 1px solid rgba(217, 227, 246, 0.22);
   font-size: var(--t-small);
   scroll-margin-top: 5rem;
 }
@@ -465,7 +519,8 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
      inside the 3rem number track and wrapped to one word per line: a single row
      measured 965px tall and the page 7,365px. */
   .entry { grid-template-columns: 3rem minmax(0, 1fr); row-gap: var(--s-3); }
-  .entry__side, .entry__sign { grid-column: 2; }
+  .entry__side, .entry__sign, .entry__prov { grid-column: 2; }
+  .entry__sign { flex-direction: row; align-items: center; }
   .entry__sign { justify-content: flex-start; }
   .req { grid-template-columns: 3.5rem minmax(0, 1fr); }
   .req__who { grid-column: 2; }
