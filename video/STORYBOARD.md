@@ -1,4 +1,4 @@
-# Barnraise — pitch film v2
+# Barnraise, pitch film v2
 
 **Event:** AWS Agents for Humans Hackathon, track Good Neighbor Agents
 **Runtime:** 2:55 · **Tier:** B (camera and depth, no WebGL) · **VO:** English
@@ -251,7 +251,7 @@ sales pitch instead of a demonstration.
 | S6 What it refuses | 20 | 41 | 123 |
 | S7 The coalition | 26 | 65 | 150 |
 | S8 Close | 7 | 18 | 154 |
-| **Total** | **175 (2:55)** | **303** | — |
+| **Total** | **175 (2:55)** | **303** | |
 
 S4 is deliberately the quietest stretch. Around twenty of its thirty-seven seconds
 carry no narration at all, because the round running is the argument. Do not fill
