@@ -1,0 +1,6 @@
+{
+ "note": "Replaced by scripts/capture_layout.mjs. Empty until you capture the product.",
+ "viewport": {"width": 1920, "height": 1080},
+ "scale": 2,
+ "pages": {}
+}

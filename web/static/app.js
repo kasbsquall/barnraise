@@ -19,6 +19,40 @@ const REDUCE = matchMedia("(prefers-reduced-motion: reduce)");
 
 /* Entry motion is transform only: a frozen fade would leave a row invisible
    forever if the document timeline stalls. */
+/**
+ * Types a message in instead of pasting it whole.
+ *
+ * An agent writing to another agent is a thing happening over time, and a block
+ * of text that lands complete reads as a record of something that already
+ * finished. The box is measured and reserved BEFORE the first character, or the
+ * feed reflows on every frame and every row below it walks up the column.
+ *
+ * The rate is capped rather than constant: at a fixed characters-per-second a
+ * four-line reply from a neighbor would still be typing when the next one
+ * arrives.
+ */
+function typeInto(node, str) {
+  if (REDUCE.matches) { node.textContent = str; return; }
+  node.textContent = str;
+  const box = node.getBoundingClientRect().height;
+  if (box) node.style.minHeight = `${Math.ceil(box)}px`;
+  node.textContent = "";
+  node.classList.add("is-typing");
+
+  const dur = Math.min(2300, Math.max(420, str.length * 8));
+  let t0 = null;
+  const step = (now) => {
+    if (t0 === null) t0 = now;
+    const p = Math.min(1, (now - t0) / dur);
+    node.textContent = str.slice(0, Math.round(str.length * p));
+    if (p < 1) return requestAnimationFrame(step);
+    node.classList.remove("is-typing");
+    node.style.minHeight = "";
+  };
+  requestAnimationFrame(step);
+}
+
+
 function enter(node, index = 0, mode = "batch") {
   if (REDUCE.matches || typeof node.animate !== "function") return;
   const stream = mode === "stream";
@@ -110,8 +144,10 @@ function render() {
   renderPhase(state.ronda?.fase || "idle");
   renderPending(state.ronda?.pendiente || null);
   if (state.actividad?.length) {
+    // History is replayed, not re-lived: these events already happened, so they
+    // are painted whole. Only what arrives over the stream is typed.
     $("#feed").replaceChildren();
-    state.actividad.forEach(addEvent);
+    state.actividad.forEach((e) => addEvent(e, false));
   }
 }
 
@@ -334,6 +370,75 @@ const ROUTE_PATH = {
   "central-library|san-martin-school":"M150,250 V300 H410 V250",
 };
 
+/**
+ * Sends a pulse along the route between two organizations when their agents
+ * actually exchange a message.
+ *
+ * Until now the map drew the agreements already fulfilled and then sat still,
+ * so a round could run to completion with the feed filling and the map inert.
+ * A diagram of a neighborhood that does not move while the neighborhood is
+ * talking is decoration. What travels here is one real message.
+ *
+ * The dot walks the path with getPointAtLength rather than a CSS offset-path,
+ * because the route is an SVG path with corners and offset-path support for
+ * those is uneven.
+ */
+function pulseRoute(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+  const svg = $("#map");
+  const line = svg?.querySelector(`path[data-link="${[fromId, toId].sort().join("|")}"]`);
+  if (!line) return;
+
+  const len = line.getTotalLength();
+  const start = line.getPointAtLength(0);
+  const here = STATIONS[fromId];
+  const there = STATIONS[toId];
+  if (!here || !there) return;
+  // The path is stored under a sorted key, so it may run either way. Whichever
+  // end is nearer the sender is where this message starts.
+  const forward = Math.hypot(start.x - here.x, start.y - here.y)
+                < Math.hypot(start.x - there.x, start.y - there.y);
+
+  line.classList.add("map__route--live");
+  const clear = () => line.classList.remove("map__route--live");
+
+  // Which station spoke and which one heard it, each at its own moment. Without
+  // this the message is a dot crossing a diagram; with it the map reads as two
+  // organizations taking turns.
+  const ring = (orgId) => {
+    const st = svg.querySelector(`circle[data-org="${orgId}"]`);
+    if (!st) return;
+    st.classList.add("map__station--hit");
+    setTimeout(() => st.classList.remove("map__station--hit"), 520);
+  };
+  ring(fromId);
+
+  if (REDUCE.matches) { setTimeout(() => { clear(); ring(toId); }, 500); return; }
+
+  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  dot.setAttribute("r", 6);
+  dot.setAttribute("class", `map__pulse map__pulse--${routeOf(fromId)}`);
+  svg.append(dot);
+
+  const DUR = 900;
+  let t0 = null;
+  const step = (now) => {
+    if (t0 === null) t0 = now;
+    const p = Math.min(1, (now - t0) / DUR);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const at = line.getPointAtLength((forward ? eased : 1 - eased) * len);
+    dot.setAttribute("cx", at.x);
+    dot.setAttribute("cy", at.y);
+    dot.setAttribute("opacity", String(p < 0.12 ? p / 0.12 : p > 0.86 ? (1 - p) / 0.14 : 1));
+    if (p < 1) return requestAnimationFrame(step);
+    dot.remove();
+    clear();
+    ring(toId);
+  };
+  requestAnimationFrame(step);
+}
+
+
 function renderMap() {
   const svg = $("#map");
   const NS = "http://www.w3.org/2000/svg";
@@ -357,7 +462,7 @@ function renderMap() {
     if (!d) return;
     const width = 3 + (v.acuerdos / max) * 8;
     const owner = routeOf(v.a);
-    const line = add("path", { d, class: `map__route map__route--${owner}`, "stroke-width": width });
+    const line = add("path", { d, "data-link": key, class: `map__route map__route--${owner}`, "stroke-width": width });
     if (!REDUCE.matches) {
       const len = line.getTotalLength();
       line.setAttribute("stroke-dasharray", len);
@@ -372,7 +477,7 @@ function renderMap() {
   state.organizaciones.forEach((o) => {
     const p = STATIONS[o.org_id];
     if (!p) return;
-    add("circle", { cx: p.x, cy: p.y, r: 9, class: "map__station",
+    add("circle", { cx: p.x, cy: p.y, r: 9, class: "map__station", "data-org": o.org_id,
                     stroke: `var(--route-${routeOf(o.org_id)})` });
     add("text", { x: p.x, y: p.y + p.dy, "text-anchor": p.anchor, class: "map__label" },
         o.nombre.toUpperCase());
@@ -551,11 +656,19 @@ function followFeed(list, item) {
   while (list.children.length > 60) list.firstElementChild.remove();
 }
 
-function addEvent(ev) {
+function addEvent(ev, live = false) {
   if (ev.tipo === "fase") return renderPhase(ev.fase);
   if (ev.tipo === "aprobacion_requerida" && state) renderPending(ev);
   if (ev.tipo === "aprobacion_resuelta" && state) renderPending(null);
-  if (ev.tipo === "decision" || ev.tipo === "ronda_fin") { load().catch(() => {}); if (ev.tipo === "decision") return; }
+  if (ev.tipo === "decision" || ev.tipo === "ronda_fin") {
+    // Only a LIVE event may trigger a refetch. Replaying history called load()
+    // once per historical decision, and load() replays the history again, so a
+    // single finished round left the page fetching its own state about 150 times
+    // a second forever. It also destroyed the feed between every frame, which is
+    // why nothing in it could be clicked or animated.
+    if (live) load().catch(() => {});
+    if (ev.tipo === "decision") return;
+  }
 
   $("#feed-empty").hidden = true;
   const list = $("#feed");
@@ -569,6 +682,7 @@ function addEvent(ev) {
   const body = el("div");
   const route = el("p", "event__route");
   const text = el("p", "event__text");
+  let typed = "";
 
   if (ev.tipo === "mensaje") {
     const from = state?.organizaciones.find((o) => o.nombre === ev.de);
@@ -578,26 +692,30 @@ function addEvent(ev) {
       `<span class="label">${ev.de}</span>${icon("arrow")}` +
       `<span class="dot dot--${to ? routeOf(to.org_id) : "lib"}"></span>` +
       `<span class="label">${ev.a}</span><span class="label">A2A</span>`;
-    text.textContent = clean(ev.texto);
     if (ev.texto.length > 260) text.classList.add("event__text--clamp");
+    typed = clean(ev.texto);
+    if (live && from && to) pulseRoute(from.org_id, to.org_id);
   } else {
     const make = EVENT_TEXT[ev.tipo];
     if (!make) return;
     const [title, detail, milestone] = make(ev);
     if (milestone) item.classList.add("event--milestone");
     route.innerHTML = `<span class="label">${title}</span>`;
-    text.textContent = clean(detail);
     if (detail.length > 260) text.classList.add("event__text--clamp");
+    typed = clean(detail);
   }
 
   body.append(route, text);
   item.append(body);
   followFeed(list, item);
+  // After it is in the document, so the reserved box can be measured.
+  if (live) typeInto(text, typed);
+  else text.textContent = typed;
 }
 
 function connect() {
   const src = new EventSource("/api/stream");
-  src.onmessage = (m) => { try { addEvent(JSON.parse(m.data)); } catch (_) {} };
+  src.onmessage = (m) => { try { addEvent(JSON.parse(m.data), true); } catch (_) {} };
   src.onerror = () => { src.close(); setTimeout(connect, 3000); };
 }
 

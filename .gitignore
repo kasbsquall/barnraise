@@ -7,3 +7,12 @@ validation/*.log
 .playwright-mcp/
 generated/
 *.orig.png
+
+# Video working files: raw captures and renders are large and reproducible
+video/capture/raw/
+video/capture/mp4/
+video/capture/qa/
+video/capture/node_modules/
+video/remotion/node_modules/
+video/remotion/out/
+video/remotion/public/vid/

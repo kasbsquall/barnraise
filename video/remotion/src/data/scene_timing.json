@@ -1,0 +1,8 @@
+{
+  "vo": 73.0,
+  "note": "Placeholder while the picture is being approved scene by scene. These are the storyboard's planned durations; the real values get derived from the recorded voiceover and overwrite this file, which is what the visuals then re-sync to.",
+  "scenes": [
+    { "id": "agents", "start": 0.0, "end": 37.0, "dur": 37.0 },
+    { "id": "signatures", "start": 37.0, "end": 73.0, "dur": 36.0 }
+  ]
+}

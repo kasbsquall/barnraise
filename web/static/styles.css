@@ -329,6 +329,27 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .map__route--lib    { stroke: var(--route-lib); }
 .map__route--school { stroke: var(--route-school); }
 .map__ghost { fill: none; stroke: var(--ink-faint); stroke-width: 1.5; stroke-dasharray: 2 10; opacity: 0.5; }
+/* A route carrying a message right now. The line lifts rather than changes
+   colour, because colour on this map already means which organization owns the
+   route and a second meaning on the same channel would be unreadable. */
+.map__route--live { filter: brightness(1.5); }
+.map__pulse { stroke: none; }
+/* The ring swells and settles. Transform only, and the origin has to be stated
+   for SVG or the circle grows from the corner of the viewBox. */
+.map__station { transition: none; transform-box: fill-box; transform-origin: center; }
+.map__station--hit { animation: station-hit 520ms cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes station-hit {
+  0%   { transform: scale(1); }
+  32%  { transform: scale(1.85); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map__station--hit { animation: none; }
+}
+.map__pulse--food   { fill: var(--route-food); }
+.map__pulse--lib    { fill: var(--route-lib); }
+.map__pulse--school { fill: var(--route-school); }
+
 .map__station { fill: var(--field); stroke-width: 3.5; }
 .map__label { font-family: var(--font-ui); font-size: 11px; font-weight: 600; fill: var(--ink); letter-spacing: 0.04em; }
 .map__meta  { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-faint); }
@@ -347,6 +368,23 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 .event--milestone { background: var(--plate-high); }
 .event--milestone .event__text { color: var(--ink); }
 .event__text--clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+/* The caret only exists while an agent is writing. It is a block of ink rather
+   than a border so it sits on the text baseline at any font size. */
+.event__text.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 0.08em;
+  vertical-align: -0.14em;
+  background: var(--route-lib);
+  opacity: 0.85;
+  animation: caret 1s steps(1, end) infinite;
+}
+@keyframes caret { 0%, 55% { opacity: 0.85; } 56%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .event__text.is-typing::after { display: none; }
+}
 .dot { width: 9px; height: 9px; flex: none; }
 .dot--food { background: var(--route-food); }
 .dot--lib { background: var(--route-lib); }
