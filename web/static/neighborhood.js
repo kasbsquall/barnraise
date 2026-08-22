@@ -94,6 +94,7 @@ function buildMap(organizaciones, onSelect) {
       paint: {
         "line-color": "#04080e",
         "line-width": ["+", ["get", "width"], 8],
+        "line-offset": ["get", "offset"],
         "line-opacity": 0.92,
         "line-blur": 0.5,
       },
@@ -106,6 +107,7 @@ function buildMap(organizaciones, onSelect) {
       paint: {
         "line-color": ["get", "color"],
         "line-width": ["get", "width"],
+        "line-offset": ["get", "offset"],
         "line-opacity": 1,
       },
     });
@@ -194,7 +196,13 @@ function drawLinks(vinculos) {
       const key = routeKey(v.a, v.b);
       const already = drawnKeys.has(key);
       const upto = already ? r.linea.length : Math.max(2, Math.round(fraction * r.linea.length));
-      const props = {color: routeHex(v.a), width: 5 + (v.acuerdos / max) * 6,
+      const width = 5 + (v.acuerdos / max) * 6;
+      const props = {color: routeHex(v.a), width,
+                     // Spread the routes off the centre line so a shared street
+                     // shows two parallel relationships instead of one muddled
+                     // trace. Offsets are stable per link, not per render.
+                     offset: (usable.findIndex((u) => routeKey(u.v.a, u.v.b) === key)
+                              - (usable.length - 1) / 2) * (width + 3),
                      a: v.a, b: v.b, acuerdos: v.acuerdos};
       features.push({type: "Feature", properties: props,
                      geometry: {type: "LineString", coordinates: r.linea.slice(0, upto)}});
