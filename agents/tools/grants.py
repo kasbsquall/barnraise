@@ -94,7 +94,7 @@ def evaluar(
         if tipo == "poblacion":
             ok = poblacion_total >= req["poblacion_minima"]
             if ok:
-                aportes[req["id"]] = f"suma de las {len(profiles)} organizaciones"
+                aportes[req["id"]] = f"all {len(profiles)} together"
         elif tipo == "capacidad":
             claves = [_normalize(k) for k in req["palabras_clave"]]
             quienes = [
@@ -110,7 +110,7 @@ def evaluar(
                 and len(evidencia.organizaciones_involucradas) >= req["organizaciones_minimas"]
             )
             if ok:
-                aportes[req["id"]] = f"{evidencia.total} acuerdos en el Libro del Barrio"
+                aportes[req["id"]] = f"{evidencia.total} agreements in the ledger"
         else:
             ok = False
 

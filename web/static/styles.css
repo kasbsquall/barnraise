@@ -197,6 +197,7 @@ body { overflow: hidden; }
 .views { display: flex; border-bottom: 1px solid var(--rule); flex: none; }
 .view {
   flex: 1; appearance: none; background: none; border: 0;
+  display: flex; align-items: center; justify-content: center; gap: var(--s-2);
   padding: var(--s-4) var(--s-3);
   font-family: var(--font-mono); font-size: var(--t-micro);
   text-transform: uppercase; letter-spacing: 0.14em;
@@ -207,6 +208,13 @@ body { overflow: hidden; }
 .view:hover { color: var(--ink-soft); }
 .view[aria-current="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 .view:focus-visible { outline: 2px solid var(--waiting); outline-offset: -2px; }
+.view .ico { width: 15px; height: 15px; flex: none; }
+.view__n {
+  font-size: 10px; letter-spacing: 0.04em;
+  padding: 1px 5px; border: 1px solid var(--rule);
+  color: var(--ink-faint); font-variant-numeric: tabular-nums;
+}
+.view[aria-current="true"] .view__n { color: var(--ink); border-color: var(--ink-faint); }
 
 .view-pane > * + * { margin-top: var(--s-6); }
 .run { display: flex; flex-direction: column; gap: var(--s-3); align-items: flex-start; }
@@ -251,6 +259,24 @@ body { overflow: hidden; }
 
 /* ---------- the selected organization ---------- */
 .orgcard { position: relative; background: var(--plate); border: 1px solid var(--rule); padding: var(--s-6); }
+/* The building, so an organization is a place rather than a row of text. The
+   image is decorative: everything it conveys is also written beside it, which is
+   why the alt is empty rather than a description a screen reader must sit
+   through. */
+.orgcard__shot {
+  margin: calc(-1 * var(--s-6)) calc(-1 * var(--s-6)) var(--s-4);
+  aspect-ratio: 16 / 7; overflow: hidden; background: var(--plate-low);
+}
+.orgcard__shot img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  /* Pulled toward the ground so six photographs from six angles still read as
+     one set and do not fight the interface they sit in. */
+  filter: saturate(0.72) contrast(1.04) brightness(0.82);
+}
+.orgcard__shot::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0;
+  height: calc(var(--s-6) + 1px); pointer-events: none;
+}
 .orgcard--food   { border-left: 0; box-shadow: inset 3px 0 0 var(--route-food); }
 .orgcard--lib    { box-shadow: inset 3px 0 0 var(--route-lib); }
 .orgcard--school { box-shadow: inset 3px 0 0 var(--route-school); }
@@ -380,29 +406,34 @@ body { overflow: hidden; }
 .fund { background: var(--plate); border: 1px solid var(--rule); }
 .fund__head {
   display: flex; align-items: flex-end; justify-content: space-between;
-  gap: var(--s-6); flex-wrap: wrap;
-  padding: var(--s-8) var(--s-6) var(--s-6);
+  gap: var(--s-4); flex-wrap: wrap;
+  padding: 0 0 var(--s-6);
   border-bottom: 1px solid var(--rule);
 }
 .fund__name { font-size: var(--t-h2); letter-spacing: -0.02em; margin-top: var(--s-2); }
 .amount { display: flex; align-items: baseline; gap: var(--s-2); }
 .amount__n {
-  font-size: var(--t-mega); font-weight: 700; letter-spacing: -0.04em;
-  line-height: 0.85; color: var(--waiting);
+  font-size: var(--t-h1); font-weight: 700; letter-spacing: -0.035em;
+  line-height: 0.9; color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 .amount__unit { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-faint); }
 
 .reqs { display: grid; gap: var(--gutter); background: var(--rule-soft); }
+/* Three columns for a full-width page put every requirement's description into a
+   column narrow enough to break one word per line inside the panel. The id and
+   the coverage share a row, the sentence gets the full width under them. */
 .req {
-  display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 18rem);
-  gap: var(--s-4); align-items: baseline;
-  background: var(--plate); padding: var(--s-3) var(--s-6);
+  display: grid; grid-template-columns: 4rem minmax(0, 1fr);
+  gap: var(--s-2) var(--s-3); align-items: baseline;
+  background: var(--plate); padding: var(--s-4);
   font-size: var(--t-small);
 }
 .req--hero { background: var(--plate-high); }
 .req--hero .label { display: block; margin-top: var(--s-1); color: var(--waiting); }
 .req__id { font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-faint); }
-.req__who { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.req__who { grid-column: 2; display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.req__text { grid-column: 2; }
 
 /* route capsule: an organization, in its own colour */
 .cap {
@@ -420,14 +451,24 @@ body { overflow: hidden; }
 .cap--all    { background: transparent; color: var(--ink-soft); border: 1px dashed var(--rule); }
 
 /* alone vs together */
-.alone { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-         gap: var(--gutter); background: var(--rule-soft); margin-top: var(--s-8); }
-.alone__col { background: var(--plate-low); padding: var(--s-6); }
-.alone__n { font-size: var(--t-h1); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
-.alone__of { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-faint); }
-.alone__who { margin-top: var(--s-3); }
+/* Six organizations plus the combined figure is seven columns, which was
+   unreadable at any panel width. A row each: the count, a bar, the name. */
+.alone { display: flex; flex-direction: column; gap: var(--gutter);
+         background: var(--rule-soft); margin-top: var(--s-6); }
+.alone__col {
+  background: var(--plate-low); padding: var(--s-3) var(--s-4);
+  display: grid; grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+  gap: var(--s-3); align-items: center;
+}
+.alone__n { font-size: var(--t-h3); font-weight: 700; letter-spacing: -0.02em;
+            line-height: 1; font-variant-numeric: tabular-nums; }
+.alone__of { font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-faint); }
+.alone__who { margin: 0; }
+.alone__bar { grid-column: 1 / -1; height: 3px; background: var(--rule-soft); }
+.alone__bar i { display: block; height: 100%; background: var(--ink-faint);
+                transform-origin: left; }
 .alone--together { background: var(--plate-high); }
-.alone--together .alone__n { color: var(--ok); }
+.alone--together .alone__bar i { background: var(--ink); }
 
 /* ---------- ledger ---------- */
 .ledger { display: grid; gap: var(--gutter); background: var(--rule-soft); }

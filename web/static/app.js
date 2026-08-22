@@ -208,13 +208,15 @@ function renderFund() {
     enter(row, i);
     const who = c.aportes[r.id];
     const caps = !who ? '<span class="cap cap--all">not covered</span>'
-      : who.includes("suma de") || who.includes("acuerdos")
-        ? `<span class="cap cap--all">${who.includes("acuerdos") ? "the ledger" : "all three together"}</span>`
+      : who.includes("together") || who.includes("agreements")
+        ? `<span class="cap cap--all">${esc(who)}</span>`
         : who.split(", ").map((o) => `<span class="cap cap--${routeOf(o)}">${initials(o)}</span>`).join("");
     row.innerHTML =
       `<span class="req__id">${esc(r.id)}</span>` +
-      `<span>${esc(r.descripcion)}${r.tipo === "colaboracion" ? ' <span class="label">this is what the ledger is for</span>' : ""}</span>` +
-      `<span class="req__who">${caps}</span>`;
+      `<span class="req__who">${caps}</span>` +
+      `<span class="req__text">${esc(r.descripcion)}` +
+        (r.tipo === "colaboracion" ? ' <span class="label">this is what the ledger is for</span>' : "") +
+      `</span>`;
     reqs.append(row);
   });
 
@@ -222,21 +224,30 @@ function renderFund() {
   const alone = $("#alone");
   alone.replaceChildren();
   const total = c.requisitos.length;
-  state.organizaciones.forEach((o, i) => {
+  // A row each, ordered by how much of the call an organization covers on its
+  // own. Six of these plus the combined figure was seven columns side by side,
+  // which no panel width could hold.
+  const orden = [...state.organizaciones]
+    .sort((a, b) => b.requisitos_cubiertos.length - a.requisitos_cubiertos.length);
+  orden.forEach((o, i) => {
+    const n = o.requisitos_cubiertos.length;
     const col = el("div", "alone__col");
     enter(col, i);
     col.innerHTML =
-      `<p class="label">alone</p>` +
-      `<p><span class="alone__n">${o.requisitos_cubiertos.length}</span><span class="alone__of"> of ${total}</span></p>` +
-      `<p class="alone__who"><span class="cap cap--${routeOf(o.org_id)}">${esc(initials(o.org_id))}</span> ${o.nombre}</p>`;
+      `<span class="alone__n">${n}</span>` +
+      `<p class="alone__who"><span class="cap cap--${routeOf(o.org_id)}">${esc(initials(o.org_id))}</span> ${esc(o.nombre)}</p>` +
+      `<span class="alone__of">${n} of ${total} alone</span>` +
+      `<span class="alone__bar"><i style="transform:scaleX(${(n / total).toFixed(3)})"></i></span>`;
     alone.append(col);
   });
+  const juntas = c.cubiertos_en_conjunto.length;
   const together = el("div", "alone__col alone--together");
-  enter(together, 3);
+  enter(together, orden.length);
   together.innerHTML =
-    `<p class="label">together</p>` +
-    `<p><span class="alone__n">${c.cubiertos_en_conjunto.length}</span><span class="alone__of"> of ${total}</span></p>` +
-    `<p class="alone__who">${c.poblacion_conjunta.toLocaleString("en-US")} people served</p>`;
+    `<span class="alone__n">${juntas}</span>` +
+    `<p class="alone__who"><strong>The whole neighborhood</strong></p>` +
+    `<span class="alone__of">${c.poblacion_conjunta.toLocaleString("en-US")} people</span>` +
+    `<span class="alone__bar"><i style="transform:scaleX(${(juntas / total).toFixed(3)})"></i></span>`;
   alone.append(together);
 
   renderCoalition();
@@ -377,6 +388,10 @@ function renderLedger() {
   if (signed) parts.push(`${signed} signed, not yet delivered`);
   if (waiting) parts.push(`${waiting} awaiting a signature`);
   $("#ledger-legend").textContent = parts.join(" · ");
+  // The tab carries the count, so the panel says how much evidence exists
+  // without having to be opened.
+  const badge = $("#view-n-ledger");
+  if (badge) badge.textContent = String(state.acuerdos.length);
 
   if (!state.acuerdos.length) {
     const empty = el("p", "empty");
@@ -887,6 +902,9 @@ function renderOrgCard() {
     .filter((x) => x.etiqueta);
 
   card.innerHTML =
+    `<figure class="orgcard__shot">` +
+      `<img src="/static/img/${esc(o.org_id)}.webp" alt="" loading="lazy" width="880" height="495">` +
+    `</figure>` +
     `<button class="orgcard__close" type="button" aria-label="Close">${icon("x")}</button>` +
     `<p class="label">${esc(o.tipo)}</p>` +
     `<h3 class="orgcard__name">${esc(o.nombre)}</h3>` +

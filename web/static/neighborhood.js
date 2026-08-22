@@ -81,6 +81,23 @@ function buildMap(organizaciones, onSelect) {
     // message. Two layers rather than one so a live leg can be styled without
     // touching the others.
     map.addSource("links", {type: "geojson", data: {type: "FeatureCollection", features: []}});
+
+    // A casing under every route. Without it a coloured line sits directly on a
+    // blue-grey street grid and the eye cannot separate the two: the route reads
+    // as another street. This is what printed route maps do, and it is the whole
+    // reason a highlighted route is legible on a paper map.
+    map.addLayer({
+      id: "links-casing",
+      type: "line",
+      source: "links",
+      layout: {"line-cap": "round", "line-join": "round"},
+      paint: {
+        "line-color": "#04080e",
+        "line-width": ["+", ["get", "width"], 8],
+        "line-opacity": 0.92,
+        "line-blur": 0.5,
+      },
+    });
     map.addLayer({
       id: "links-line",
       type: "line",
@@ -89,17 +106,38 @@ function buildMap(organizaciones, onSelect) {
       paint: {
         "line-color": ["get", "color"],
         "line-width": ["get", "width"],
-        "line-opacity": 0.85,
+        "line-opacity": 1,
+      },
+    });
+    // The junction where two organizations' routes meet. It was ambiguous which
+    // line owned which leg where they overlapped, so the meeting point is drawn.
+    map.addLayer({
+      id: "links-joint",
+      type: "circle",
+      source: "links",
+      filter: ["==", "$type", "Point"],
+      paint: {
+        "circle-radius": 5,
+        "circle-color": "#04080e",
+        "circle-stroke-width": 2.5,
+        "circle-stroke-color": ["get", "color"],
       },
     });
 
     map.addSource("live", {type: "geojson", data: {type: "FeatureCollection", features: []}});
     map.addLayer({
+      id: "live-casing",
+      type: "line",
+      source: "live",
+      layout: {"line-cap": "round", "line-join": "round"},
+      paint: {"line-color": "#04080e", "line-width": 13, "line-opacity": 0.9, "line-blur": 0.6},
+    });
+    map.addLayer({
       id: "live-line",
       type: "line",
       source: "live",
       layout: {"line-cap": "round", "line-join": "round"},
-      paint: {"line-color": ["get", "color"], "line-width": 5, "line-opacity": 0.95},
+      paint: {"line-color": ["get", "color"], "line-width": 6, "line-opacity": 1},
     });
     map.addLayer({
       id: "live-dot",
@@ -125,27 +163,65 @@ function buildMap(organizaciones, onSelect) {
     document.dispatchEvent(new CustomEvent("map:ready"));
   });
 
+  window.__map = map;      // a handle for inspection while debugging
   map.on("click", () => onSelect(null));
 }
 
-/** Draws one line per pair that has fulfilled agreements, thicker with more. */
+/**
+ * Draws one route per pair that has agreements, thicker with more of them.
+ *
+ * Each route is also given its two end points as separate features, so the place
+ * where two organizations' routes meet is marked rather than left as an
+ * ambiguous overlap of two coloured lines.
+ *
+ * The routes draw ON rather than appearing: a line that arrives finished says
+ * nothing about when it arrived, and the first thing a viewer asks of this map
+ * is which of these connections is new.
+ */
+let drawnKeys = new Set();
+
 function drawLinks(vinculos) {
   if (!mapReady) return;
   const max = Math.max(1, ...vinculos.map((v) => v.acuerdos));
-  const features = vinculos.map((v) => {
-    const r = routeBetween(v.a, v.b);
-    if (!r) return null;
-    return {
-      type: "Feature",
-      geometry: {type: "LineString", coordinates: r.linea},
-      properties: {
-        color: routeHex(v.a),
-        width: 2 + (v.acuerdos / max) * 5,
-        a: v.a, b: v.b, acuerdos: v.acuerdos,
-      },
-    };
-  }).filter(Boolean);
-  map.getSource("links")?.setData({type: "FeatureCollection", features});
+  const src = map.getSource("links");
+  if (!src) return;
+
+  const usable = vinculos.map((v) => ({v, r: routeBetween(v.a, v.b)})).filter((x) => x.r);
+  const isNew = usable.some(({v}) => !drawnKeys.has(routeKey(v.a, v.b)));
+  const build = (fraction) => {
+    const features = [];
+    usable.forEach(({v, r}) => {
+      const key = routeKey(v.a, v.b);
+      const already = drawnKeys.has(key);
+      const upto = already ? r.linea.length : Math.max(2, Math.round(fraction * r.linea.length));
+      const props = {color: routeHex(v.a), width: 5 + (v.acuerdos / max) * 6,
+                     a: v.a, b: v.b, acuerdos: v.acuerdos};
+      features.push({type: "Feature", properties: props,
+                     geometry: {type: "LineString", coordinates: r.linea.slice(0, upto)}});
+      if (already || fraction >= 1) {
+        features.push({type: "Feature", properties: props,
+                       geometry: {type: "Point", coordinates: r.linea[r.linea.length - 1]}});
+      }
+    });
+    return {type: "FeatureCollection", features};
+  };
+
+  if (!isNew || REDUCE.matches) {
+    usable.forEach(({v}) => drawnKeys.add(routeKey(v.a, v.b)));
+    src.setData(build(1));
+    return;
+  }
+
+  const DUR = 900;
+  let t0 = null;
+  const step = (now) => {
+    if (t0 === null) t0 = now;
+    const p = Math.min(1, (now - t0) / DUR);
+    src.setData(build(1 - Math.pow(1 - p, 3)));
+    if (p < 1) return requestAnimationFrame(step);
+    usable.forEach(({v}) => drawnKeys.add(routeKey(v.a, v.b)));
+  };
+  requestAnimationFrame(step);
 }
 
 /** A message crossing the neighborhood, drawn along the road it would travel. */
