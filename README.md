@@ -70,7 +70,7 @@ alone.
 ## How it works
 
 Every agent knows only its own organization's data. Tools are closures over one
-private profile, so an agent physically cannot read a neighbor's resources. What
+private profile, so an agent has no tool that returns a neighbor's resources. What
 crosses the A2A boundary is only the message an agent chose to write.
 
 Human approval is structural, at two distinct points: every daily exchange needs
@@ -120,10 +120,16 @@ Seed the neighborhood's collaboration history:
 python seed/seed_history.py --reset
 ```
 
-Start two organizations as A2A servers, each in its own process:
+Start the organizations as A2A servers, each in its own process. Any organization
+you want to start a round *from* can be the client, but every organization it
+will *talk to* needs its server up:
 
 ```bash
 python a2a/serve_org.py seed/orgs/library.json 9001
+```
+
+```bash
+python a2a/serve_org.py seed/orgs/food_bank.json 9002
 ```
 
 ```bash
@@ -140,9 +146,13 @@ On Windows, `launch.ps1` starts all three processes at once. It runs the two
 neighbor agents on Ollama and the negotiating agent on your chosen provider,
 which keeps a free tier from running out mid-round.
 
-Press **Correr ronda de intercambio** to watch the agents negotiate live, then
-approve or reject when the agent stops and asks. Press **Buscar coalición** to
-see the funding call scanned against the neighborhood's combined capabilities.
+Press **Run an exchange round** to watch the agents negotiate live, then sign or
+decline when the agent stops and asks. Press **Look for a coalition** to see the
+funding call scanned against the neighborhood's combined capabilities.
+
+A director only ever sees their own organization's decision. Viewing the console
+as someone else shows that a neighbor is deciding, and the server refuses a
+signature that does not come from the organization the pause belongs to.
 
 ### Command line
 
@@ -204,9 +214,21 @@ python validation/test_approval.py
 python validation/test_signature.py
 ```
 
+```bash
+python validation/test_guards.py
+```
+
 `test_seed` proves every seeded need has a counterpart in another organization.
 `test_ledger` proves a single signature never approves an agreement.
 `test_approval` proves the ledger stays empty while the agent waits for a human.
+`test_signature` proves the approval that writes an agreement is the one that
+signs it, and that a later rejection in the same round cannot strand it unsigned.
+`test_guards` proves the checks around `record_agreement` reject a resource the
+organization does not own, a day nobody negotiated, and filler text, while still
+letting a real exchange through.
+
+`test_seed`, `test_ledger`, `test_signature` and `test_guards` are deterministic
+and need no model. `test_approval` drives a live agent.
 
 ## Notes on running locally
 

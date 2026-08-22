@@ -33,19 +33,42 @@ def _dias_en(texto: str) -> set[str]:
     return {d.replace("é", "e").replace("á", "a") for d in DIAS if d.replace("é", "e").replace("á", "a") in t}
 
 
+# Time words say WHEN a resource is free, never WHAT it is, so they must never be
+# what proves a match. "Saturday mornings" once overlapped "Tuesday mornings" and
+# let a school hand over a van it does not own.
+_TEMPORALES = {
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "morning", "mornings", "afternoon", "afternoons", "evening", "evenings",
+    "night", "nights", "day", "days", "daily", "week", "weeks", "weekly",
+    "weekday", "weekdays", "weekend", "weekends", "month", "months", "monthly",
+    "hour", "hours", "time", "times", "schedule", "available", "availability",
+}
+
+
+def _sustantivo(texto: str) -> set[str]:
+    """Keywords that identify a resource, with the calendar stripped out."""
+    return _keywords(texto) - _TEMPORALES
+
+
 def build_ledger_tools(
     org_id: str,
     contexto_esperado: str = "",
     recursos_propios: list[str] | None = None,
+    necesidad: str = "",
 ) -> list:
     """contexto_esperado: the need being covered plus what the neighbor offered.
     recursos_propios: our own idle resources.
+    necesidad: the need discovery actually selected, id included.
 
-    Both are used to reject registrations that misstate the exchange. An
+    The first two are used to reject registrations that misstate the exchange. An
     agreement that names the wrong resource, the wrong direction or a day nobody
-    agreed to is worse than no record at all, because it becomes evidence."""
-    esperado_kw = _keywords(contexto_esperado) if contexto_esperado else set()
-    propios_kw = [_keywords(r) for r in (recursos_propios or [])]
+    agreed to is worse than no record at all, because it becomes evidence.
+
+    The third exists because which need a round set out to cover is a fact the
+    system already knows. Letting the model restate it in prose only adds a place
+    for it to drift, so the ledger records the known need."""
+    esperado_kw = _sustantivo(contexto_esperado) if contexto_esperado else set()
+    propios_kw = [k for k in (_sustantivo(r) for r in (recursos_propios or [])) if k]
 
     @tool
     def record_agreement(
@@ -79,7 +102,7 @@ def build_ledger_tools(
                 "agreed with the neighbor: which resource, which days, which conditions."
             )
 
-        if esperado_kw and not (_keywords(recurso_recibido) & esperado_kw):
+        if esperado_kw and not (_sustantivo(recurso_recibido) & esperado_kw):
             return (
                 f"Nothing was filed. The resource you say we receive ('{recurso_recibido}') "
                 f"does not match the need being covered nor what the neighbor offered. Real "
@@ -90,7 +113,7 @@ def build_ledger_tools(
         # You cannot give away what your organization does not have. This catches
         # the exchange being recorded backwards.
         if propios_kw:
-            entregado_kw = _keywords(recurso_entregado)
+            entregado_kw = _sustantivo(recurso_entregado)
             if not any(entregado_kw & propio for propio in propios_kw):
                 return (
                     f"Nothing was filed. '{recurso_entregado}' is not one of our "
@@ -118,7 +141,7 @@ def build_ledger_tools(
                 recurso_entregado=recurso_recibido,
                 recurso_recibido=recurso_entregado,
                 condiciones=condiciones,
-                necesidad_cubierta=necesidad_cubierta,
+                necesidad_cubierta=necesidad or necesidad_cubierta,
             )
         finally:
             conn.close()

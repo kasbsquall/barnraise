@@ -66,8 +66,9 @@
 </header>
 
 <p class="disclosure">
-  Demo neighborhood. The three organizations and the funding call are seeded fixtures;
-  every agreement, signature and eligibility figure below is produced by the running system.
+  Demo neighborhood. The three organizations, the funding call and the earlier collaboration
+  history are seeded fixtures. Agreements the agents negotiate in this session are written
+  live, and every eligibility figure is computed from the ledger.
 </p>
 
 <main class="shell">
@@ -92,9 +93,9 @@
   </section>
 
   <section class="allclear" id="allclear" hidden>
-    <svg class="ico ico--lg" aria-hidden="true"><use href="#i-check"/></svg>
+    <svg class="ico ico--lg" aria-hidden="true"><use id="allclear-icon" href="#i-check"/></svg>
     <div>
-      <p><strong>Nothing needs you right now.</strong></p>
+      <p><strong id="allclear-title">Nothing needs you right now.</strong></p>
       <p class="hint" id="allclear-detail">Your agent is watching for exchanges in the background.</p>
     </div>
   </section>
@@ -122,7 +123,7 @@
     <div class="section-head">
       <div>
         <h2 id="ledger-h" class="section-title"><svg class="ico"><use href="#i-seal"/></svg>The Neighborhood Ledger</h2>
-        <p class="hint">Every row was negotiated by the agents and signed by both organizations.</p>
+        <p class="hint">No row exists here without both organizations' signatures.</p>
       </div>
       <p class="label" id="ledger-legend"></p>
     </div>
@@ -172,6 +173,6 @@
   Barnraise · Strands Agents · A2A between organizations · human approval at two points
 </footer>
 
-<script src="/static/app.js?v=4"></script>
+<script src="/static/app.js?v=6"></script>
 </body>
 </html>

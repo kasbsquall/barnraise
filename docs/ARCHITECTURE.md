@@ -47,8 +47,9 @@ are one cycle, not two features.
 ## Data isolation
 
 An organization's data never crosses the wire as a data structure. Tools are
-built as closures over one `OrgProfile`, so an agent physically cannot read
-another organization's resources or needs. What crosses the A2A boundary is only
+built as closures over one `OrgProfile`, so an agent has no tool that returns
+another organization's resources or needs, and in a round each organization runs
+in its own process. What crosses the A2A boundary is only
 the message the agent chose to write.
 
 ```python
@@ -71,6 +72,15 @@ An agreement reaches `aprobado` only when both organizations have signed. A
 coalition reaches `aprobada` only when every member has. A single signature is
 never enough.
 
+The approval of a pause *is* that organization's signature, so it is recorded
+against the agreement that approval just wrote. Recording it later, at the end of
+the round, tied the signature to whatever the last decision happened to be, which
+left an approved agreement unsigned while the interface said otherwise.
+
+A director can only decide their own organization's pause. The server rejects a
+signature that arrives under a different organization, so the two-signature rule
+does not depend on the interface being used as intended.
+
 ## Deterministic guards around the model
 
 An agreement in the ledger is evidence a funder will read, so structured data
@@ -85,6 +95,19 @@ before it is written:
 | Calendar check | A weekday nobody negotiated |
 | Coalition roles | Crediting an organization with a requirement it does not cover |
 | Coalition budget | A split that does not add up to the grant amount |
+
+Comparisons ignore calendar words, because a day or a time of day says when a
+resource is free and never what it is. Without that, "Saturday mornings" once
+overlapped "Tuesday mornings" and let a school hand over a van it does not own.
+
+Which need a round set out to cover is decided in discovery, by code, so the
+ledger records that need rather than the model's restatement of it.
+
+What the guards do not decide is whether a resource genuinely covers a need.
+That is a judgement, and it belongs to the director who signs: the decision panel
+puts the need and the resource side by side for exactly that reason. A round
+whose negotiation drifts to a different need closes with a human declining it,
+not with a check catching it.
 
 Eligibility itself is plain code, not model reasoning: whether a coalition meets
 a population threshold or covers a required capability is a fact.

@@ -182,15 +182,20 @@ async def iniciar_coalicion() -> dict:
 
 class InterrupcionRequest(BaseModel):
     decision: str
+    org_id: str | None = None
 
 
 @app.post("/api/round/interrupt")
 async def resolver_interrupcion(req: InterrupcionRequest) -> dict:
-    """A director decides on the tool call the agent is paused at."""
+    """A director decides on the tool call their own agent is paused at."""
     if req.decision not in ("aprobado", "rechazado"):
-        raise HTTPException(400, "decision invalida")
-    if not runner.resolver_interrupcion(req.decision):
-        raise HTTPException(409, "No hay ninguna aprobacion pendiente.")
+        raise HTTPException(400, "Invalid decision.")
+    try:
+        resuelta = runner.resolver_interrupcion(req.decision, firmante=req.org_id)
+    except runner.PermisoDeFirma as exc:
+        raise HTTPException(403, str(exc))
+    if not resuelta:
+        raise HTTPException(409, "There is no decision waiting.")
     return {"resuelta": True}
 
 
@@ -203,7 +208,7 @@ class DecisionRequest(BaseModel):
 @app.post("/api/agreements/{acuerdo_id}/decide")
 async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
     if req.decision not in ("aprobado", "rechazado"):
-        raise HTTPException(400, "decision invalida")
+        raise HTTPException(400, "Invalid decision.")
     aprobador = DIRECTORES.get(req.org_id, "Direccion")
     conn = book.connect()
     try:
@@ -227,7 +232,7 @@ async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
 @app.post("/api/coalitions/{coalicion_id}/decide")
 async def decidir_coalicion(coalicion_id: int, req: DecisionRequest) -> dict:
     if req.decision not in ("aprobado", "rechazado"):
-        raise HTTPException(400, "decision invalida")
+        raise HTTPException(400, "Invalid decision.")
     aprobador = DIRECTORES.get(req.org_id, "Direccion")
     conn = book.connect()
     try:

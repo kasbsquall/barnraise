@@ -298,7 +298,17 @@ function renderLedger() {
           try {
             await post(`/api/agreements/${a.id}/decide`, { org_id: me, decision: "aprobado" });
             await load();
-            acknowledge(`You signed entry #${a.id}.`, missing.length > 1);
+            // Read the resulting state instead of predicting it: the second
+            // signature is the moment the agreement becomes real, and the
+            // director should be told so in those words.
+            const after = state.acuerdos.find((x) => x.id === a.id);
+            const active = after && after.estado !== "propuesto";
+            acknowledge(
+              active
+                ? `You signed entry #${a.id}. Both organizations have signed, so it is now in force.`
+                : `You signed entry #${a.id}.`,
+              !active,
+            );
           } catch (e) { showError(e.message); b.removeAttribute("aria-disabled"); }
         });
         item.querySelector(".entry__sign").append(b);
@@ -440,9 +450,22 @@ const TERM_ORDER = ["contraparte_org_id", "recurso_recibido", "recurso_entregado
 function renderPending(pending) {
   const zone = $("#decision");
   const clear = $("#allclear");
-  if (!pending) {
+  // A director signs only their own organization. "barrio" is the coalition
+  // decision, the one every director signs from their own console.
+  const mine = pending && (pending.org_id === me || pending.org_id === "barrio");
+  if (!mine) {
     zone.hidden = true;
     clear.hidden = false;
+    if (pending) {
+      $("#allclear-icon").setAttribute("href", "#i-clock");
+      $("#allclear-title").textContent = "Nothing needs you right now.";
+      $("#allclear-detail").textContent =
+        `${dirOf(pending.org_id)} at ${nameOf(pending.org_id)} is reviewing an agreement. ` +
+        "You will be asked when it reaches your side.";
+      return;
+    }
+    $("#allclear-icon").setAttribute("href", "#i-check");
+    $("#allclear-title").textContent = "Nothing needs you right now.";
     const waiting = state.acuerdos.filter((a) => a.estado === "propuesto").length;
     $("#allclear-detail").textContent = waiting
       ? `${waiting} agreement${waiting === 1 ? "" : "s"} in the ledger still waiting on a signature.`
@@ -601,7 +624,7 @@ async function decide(decision) {
   sign.setAttribute("aria-busy", "true");
   label.textContent = decision === "aprobado" ? "Signing…" : "Declining…";
   try {
-    await post("/api/round/interrupt", { decision });
+    await post("/api/round/interrupt", { decision, org_id: me });
     if (decision === "aprobado") acknowledge(`You signed as ${dirOf(me)}.`, true);
     else acknowledge("Declined. Nothing was written to the ledger.", false);
   } catch (e) {
