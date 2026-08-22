@@ -220,6 +220,25 @@ body { overflow: hidden; }
 .run { display: flex; flex-direction: column; gap: var(--s-3); align-items: flex-start; }
 .feed-block { display: flex; flex-direction: column; gap: var(--s-3); }
 
+.maplegend {
+  position: absolute; left: calc(30rem + 2 * var(--s-6)); bottom: var(--s-6); z-index: 15;
+  display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  background: rgba(9, 20, 33, 0.86);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--rule-soft);
+  font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-faint);
+}
+.maplegend__key { display: flex; align-items: center; gap: var(--s-3); }
+.maplegend__line { width: 26px; height: 4px; flex: none; border-radius: 2px;
+                   background: var(--route-lib); box-shadow: 0 0 0 2px #04080e; }
+.maplegend__pin, .maplegend__wait {
+  width: 12px; height: 12px; flex: none; border-radius: 50%;
+  background: var(--field); border: 2px solid var(--route-kitchen);
+}
+.maplegend__wait { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(217, 227, 246, 0.28); }
+@media (max-width: 68rem) { .maplegend { display: none; } }
+
 /* ---------- pins ---------- */
 .pin {
   appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
@@ -256,6 +275,29 @@ body { overflow: hidden; }
    asks for a person, which is the answer to "where do I come in". */
 .pin--waiting .pin__disc { box-shadow: 0 0 0 3px rgba(217, 227, 246, 0.28), 0 2px 10px rgba(0,0,0,0.55); }
 .pin--waiting .pin__name { color: var(--field); background: var(--ink); border-color: var(--ink); }
+
+/* Where this director stands. */
+.youare { background: var(--plate-low); border: 1px solid var(--rule); padding: var(--s-4);
+          border-left-width: 3px; }
+.youare--food   { border-left-color: var(--route-food); }
+.youare--lib    { border-left-color: var(--route-lib); }
+.youare--school { border-left-color: var(--route-school); }
+.youare--health { border-left-color: var(--route-health); }
+.youare--kitchen{ border-left-color: var(--route-kitchen); }
+.youare--youth  { border-left-color: var(--route-youth); }
+.youare__who { margin: var(--s-1) 0 var(--s-3); font-size: var(--t-body); }
+.youare__facts { list-style: none; margin: 0; padding: 0;
+                 display: flex; flex-direction: column; gap: var(--s-2);
+                 font-size: var(--t-small); color: var(--ink-soft); }
+.youare__n { font-family: var(--font-mono); font-weight: 700; color: var(--ink);
+             font-variant-numeric: tabular-nums; margin-right: var(--s-2); }
+.youare .hint { margin-top: var(--s-3); }
+
+/* The organization you are viewing as. A ring rather than a colour, because the
+   colour on a pin already means which organization it is. */
+.pin--me .pin__disc { box-shadow: 0 0 0 2px var(--field), 0 0 0 4px currentColor,
+                                  0 2px 10px rgba(0, 0, 0, 0.55); }
+.pin--me .pin__name { font-weight: 700; }
 
 /* ---------- the selected organization ---------- */
 .orgcard { position: relative; background: var(--plate); border: 1px solid var(--rule); padding: var(--s-6); }
@@ -347,24 +389,27 @@ body { overflow: hidden; }
 .decision__head .ico { color: var(--waiting); }
 .decision__body { padding: var(--s-6); }
 .decision__title {
-  font-size: var(--t-h2); letter-spacing: -0.02em; line-height: 1.1;
-  margin-bottom: var(--s-6); max-width: 30ch;
+  font-size: var(--t-h3); letter-spacing: -0.015em; line-height: 1.15;
+  margin-bottom: var(--s-4);
 }
 .decision__title:focus-visible { outline: 2px solid var(--waiting); outline-offset: 4px; }
 
 .terms { display: grid; gap: var(--gutter); background: var(--rule-soft); margin-bottom: var(--s-6); }
+/* Label above value, not beside it. A 13rem label column inside a 430px panel
+   left 110px for the value and broke every term to one word per line. The panel
+   is narrow everywhere now, so this is not a small-screen exception. */
 .term {
-  display: grid; grid-template-columns: 13rem minmax(0, 1fr);
-  gap: var(--s-4);
+  display: flex; flex-direction: column; gap: var(--s-1);
   background: var(--plate-low);
   padding: var(--s-3) var(--s-4);
 }
 .term__k { font-family: var(--font-mono); font-size: var(--t-micro);
            text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); }
-.term__v { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink); }
+.term__v { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink);
+           line-height: 1.55; }
 
 .decision__actions { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
-.decision__note { font-size: var(--t-small); color: var(--ink-soft); max-width: 52ch; margin-top: var(--s-4); }
+.decision__note { font-size: var(--t-small); color: var(--ink-soft); margin-top: var(--s-4); }
 
 /* nothing pending is a state, not an absence */
 .allclear {
@@ -474,32 +519,48 @@ body { overflow: hidden; }
 .ledger { display: grid; gap: var(--gutter); background: var(--rule-soft); }
 .entry {
   display: grid;
-  grid-template-columns: 4rem minmax(0, 1fr) minmax(0, 1fr) 11rem;
-  /* start, not center. Each half of a row used to be centred inside its own cell,
-     so when one side wrapped to three lines and the other to one, the two column
-     headings of a single agreement sat 27px apart with no shared baseline. */
-  gap: var(--s-3) var(--s-4); align-items: start;
-  background: var(--plate); padding: var(--s-6) var(--s-6);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  background: var(--plate); padding: var(--s-4);
   font-size: var(--t-small);
 }
-/* The provenance line runs the full width under the row: when it was agreed, who
-   signed it, and when. A record meant to be read by a funder needs both. */
-.entry__prov {
-  grid-column: 2 / -1;
-  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
-  font-family: var(--font-mono); font-size: var(--t-micro);
-  color: var(--ink-faint);
-  padding-top: var(--s-3);
-  border-top: 1px solid var(--rule-soft);
+.entry__n {
+  font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-faint);
+  align-self: center;
 }
-.entry--signed .entry__prov { color: #6b7280; border-top-color: rgba(27, 36, 48, 0.12); }
+.entry__side {
+  grid-column: 1 / -1; min-width: 0;
+  padding-left: var(--s-4); border-left: 1px solid var(--rule-soft);
+}
+.entry__side + .entry__side { margin-top: calc(-1 * var(--s-1)); }
+.entry__org { font-weight: 600; font-size: var(--t-body); }
+.entry__what { display: block; font-family: var(--font-mono); font-size: var(--t-small);
+               opacity: 0.92; margin-top: var(--s-1); }
+.entry__meta { display: block; font-family: var(--font-mono); font-size: var(--t-micro);
+               color: var(--ink-faint); margin-top: var(--s-2); }
+.entry__sign {
+  grid-row: 1; grid-column: 2;
+  display: flex; align-items: center; gap: var(--s-3); justify-content: flex-end;
+}
 .entry__state {
   font-family: var(--font-mono); font-size: var(--t-micro);
   text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--ink-faint); text-align: right;
 }
-.entry--signed .entry__state { color: #6b7280; }
-.entry__sign { flex-direction: column; align-items: flex-end; gap: var(--s-2); }
+.entry__prov {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  color: var(--ink-faint);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule-soft);
+}
+.entry--signed { background: var(--signed); color: var(--signed-ink); }
+.entry--signed .label, .entry--signed .entry__meta,
+.entry--signed .entry__n, .entry--signed .entry__state { color: #5c6470; }
+.entry--signed .entry__side { border-left-color: rgba(27, 36, 48, 0.16); }
+.entry--signed .entry__prov { color: #6b7280; border-top-color: rgba(27, 36, 48, 0.14); }
+
 .section-head__aside { display: flex; align-items: center; gap: var(--s-4); flex-wrap: wrap; }
 /* Cream is the whole colour system in one rule: signed, and nothing else. */
 .entry--signed { background: var(--signed); color: var(--signed-ink); }
@@ -694,20 +755,11 @@ body { overflow: hidden; }
 /* ---------- responsive ---------- */
 @media (max-width: 68rem) {
   .network { grid-template-columns: minmax(0, 1fr); }
-  /* Every part of the row after the number belongs in the content column. Only
-     .entry__sign was moved, so the counterparty's half of each agreement landed
-     inside the 3rem number track and wrapped to one word per line: a single row
-     measured 965px tall and the page 7,365px. */
-  .entry { grid-template-columns: 3rem minmax(0, 1fr); row-gap: var(--s-3); }
-  .entry__side, .entry__sign, .entry__prov { grid-column: 2; }
-  .entry__sign { flex-direction: row; align-items: center; }
-  .entry__sign { justify-content: flex-start; }
   .req { grid-template-columns: 3.5rem minmax(0, 1fr); }
   .req__who { grid-column: 2; }
 }
 @media (max-width: 44rem) {
   .shell { padding: var(--s-6) var(--s-4) var(--s-16); gap: var(--s-8); }
-  .term { grid-template-columns: minmax(0, 1fr); gap: var(--s-1); }
   .fund__head { padding: var(--s-6) var(--s-4); }
 
   /* The top bar carried the identity chip and the live status side by side and

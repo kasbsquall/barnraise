@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
-<link rel="stylesheet" href="/static/styles.css?v=19">
+<link rel="stylesheet" href="/static/styles.css?v=22">
 </head>
 <body>
 
@@ -79,6 +79,14 @@
     written live, and every figure is computed from the ledger.
   </p>
 
+  <!-- Without this the map is a puzzle: three organizations have a line and
+       three do not, and nothing says a line means a fulfilled agreement. -->
+  <div class="maplegend" id="maplegend">
+    <span class="maplegend__key"><i class="maplegend__line"></i>a fulfilled agreement, thicker with more of them</span>
+    <span class="maplegend__key"><i class="maplegend__pin"></i>an organization with none yet</span>
+    <span class="maplegend__key"><i class="maplegend__wait"></i>waiting for a signature</span>
+  </div>
+
   <aside class="panel" id="panel">
     <nav class="views" aria-label="Views">
       <button class="view" type="button" data-view="now" aria-current="true">
@@ -123,6 +131,8 @@
             <button class="btn btn--small" id="allclear-go" type="button" hidden><span>Go to the entry</span></button>
           </div>
         </div>
+
+        <div id="youare" hidden></div>
 
         <div class="run">
           <button class="btn btn--primary" id="btn-round" type="button"><span>Run an exchange round</span></button>
@@ -185,8 +195,8 @@
 </main>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
-<script src="/static/app.js?v=19"></script>
-<script src="/static/neighborhood.js?v=18"></script>
+<script src="/static/app.js?v=20"></script>
+<script src="/static/neighborhood.js?v=20"></script>
 <script>window.__boot && window.__boot();</script>
 </body>
 </html>

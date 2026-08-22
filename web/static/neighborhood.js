@@ -273,6 +273,15 @@ function ring(orgId) {
   setTimeout(() => el.classList.remove("pin--hit"), 560);
 }
 
+/** Eases the map so the organization you are viewing as is in frame. */
+function centreOn(orgId, organizaciones) {
+  if (!mapReady || !orgId) return;
+  const o = organizaciones.find((x) => x.org_id === orgId);
+  if (!o?.ubicacion) return;
+  map.easeTo({center: [o.ubicacion.lon, o.ubicacion.lat], zoom: 14.9,
+              offset: [-180, 0], duration: 850});
+}
+
 /** Marks the pins whose director has something to decide. */
 function markWaiting(orgIds) {
   document.querySelectorAll(".pin").forEach((el) => {
@@ -307,5 +316,5 @@ async function loadRoutes() {
 // One namespace instead of six globals, so it is obvious in app.js where each of
 // these comes from.
 window.NB = {
-  buildMap, drawLinks, pulseRoute, markWaiting, focusOrg, loadRoutes, routeLabel,
+  buildMap, drawLinks, pulseRoute, markWaiting, focusOrg, centreOn, loadRoutes, routeLabel,
 };

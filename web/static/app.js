@@ -191,6 +191,44 @@ function render() {
 function renderIdentity() {
   $("#identity-name").textContent = `${dirOf(me)} · ${nameOf(me)}`;
   $("#identity-dot").style.background = `var(--route-${routeOf(me)})`;
+
+  // Switching who you are has to change something you can see. It used to change
+  // only which pending decision the panel would show, so with nothing pending the
+  // control appeared to do nothing at all.
+  document.querySelectorAll(".pin").forEach((el) => {
+    el.classList.toggle("pin--me", el.dataset.org === me);
+  });
+  window.NB?.centreOn(me, state?.organizaciones || []);
+  renderYouAre();
+}
+
+/** Where this director stands: what they hold, what they owe, what they are owed. */
+function renderYouAre() {
+  const box = $("#youare");
+  if (!box || !state) return;
+  const o = state.organizaciones.find((x) => x.org_id === me);
+  if (!o) { box.hidden = true; return; }
+
+  const mine = state.acuerdos.filter(
+    (a) => a.org_proveedora === me || a.org_solicitante === me);
+  const firmados = mine.filter((a) => a.estado !== "propuesto").length;
+  const conQuien = new Set(mine.map((a) => a.org_proveedora === me ? a.org_solicitante : a.org_proveedora));
+
+  box.hidden = false;
+  box.replaceChildren();
+  const wrap = el("div", `youare youare--${routeOf(me)}`);
+  wrap.innerHTML =
+    `<p class="label">You are</p>` +
+    `<p class="youare__who"><strong>${esc(dirOf(me))}</strong> at ${esc(o.nombre)}</p>` +
+    `<ul class="youare__facts">` +
+      `<li><span class="youare__n">${o.recursos.length}</span> things idle</li>` +
+      `<li><span class="youare__n">${o.necesidades.length}</span> needs open</li>` +
+      `<li><span class="youare__n">${firmados}</span> signed agreement${firmados === 1 ? "" : "s"}` +
+        (conQuien.size ? ` with ${[...conQuien].map((x) => esc(nameOf(x))).join(" and ")}` : "") + `</li>` +
+    `</ul>` +
+    (mine.length ? "" : `<p class="hint">No agreements yet, which is why no line reaches this ` +
+      `organization on the map. A line is a fulfilled agreement.</p>`);
+  box.append(wrap);
 }
 
 /* --- the funding call, and what it takes to reach it --- */
@@ -943,7 +981,9 @@ window.__boot = async () => {
   if (window.NB) {
     const n = await NB.loadRoutes();
     NB.buildMap(state?.organizaciones || [], selectOrg);
-    document.addEventListener("map:ready", () => { renderMap(); }, {once: true});
+    // The pins do not exist until the style has loaded, so the first paint of
+    // the identity has nothing to mark. Repeat it once the map is up.
+    document.addEventListener("map:ready", () => { renderMap(); renderIdentity(); }, {once: true});
     if (!n) console.warn("no cached routes: run seed/build_routes.py");
   }
   connect();
