@@ -1,0 +1,35 @@
+{
+  "org_id": "north-food-bank",
+  "nombre": "North Food Bank",
+  "tipo": "food bank",
+  "descripcion": "Collects market surplus and distributes food boxes to 120 families a week. Three staff and rotating volunteers.",
+  "poblacion_atendida": 480,
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "refreshments and surplus food for events",
+      "disponibilidad": "any day with 48 hours notice",
+      "notas": "fruit, bread and drinks from donations near their date, safe to eat"
+    },
+    {
+      "id": "R2",
+      "nombre": "spare space in the cold room",
+      "disponibilidad": "Monday to Friday",
+      "notas": "2 cubic metres available, temperature controlled"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "van transport on Tuesdays to collect donations from the wholesale market",
+      "frecuencia": "weekly",
+      "urgencia": "alta"
+    },
+    {
+      "id": "N2",
+      "descripcion": "a room to train volunteers in food handling",
+      "frecuencia": "monthly",
+      "urgencia": "media"
+    }
+  ]
+}

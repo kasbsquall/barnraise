@@ -1,0 +1,22 @@
+{
+  "organizaciones": [
+    {
+      "perfil": "seed/orgs/library.json",
+      "nombre": "Central Library",
+      "endpoint": "http://localhost:9001",
+      "port": 9001
+    },
+    {
+      "perfil": "seed/orgs/food_bank.json",
+      "nombre": "North Food Bank",
+      "endpoint": "http://localhost:9002",
+      "port": 9002
+    },
+    {
+      "perfil": "seed/orgs/school.json",
+      "nombre": "San Martin School",
+      "endpoint": "http://localhost:9003",
+      "port": 9003
+    }
+  ]
+}

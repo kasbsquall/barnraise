@@ -1,0 +1,41 @@
+{
+  "org_id": "central-library",
+  "nombre": "Central Library",
+  "tipo": "library",
+  "descripcion": "Neighborhood public library. Lends books and runs reading and digital literacy workshops. Staff of four.",
+  "poblacion_atendida": 850,
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "delivery van",
+      "disponibilidad": "Tuesdays 9am-5pm",
+      "notas": "800kg capacity, volunteer driver included"
+    },
+    {
+      "id": "R2",
+      "nombre": "community room for 30 people",
+      "disponibilidad": "Thursday afternoons",
+      "notas": "projector and chairs included"
+    },
+    {
+      "id": "R3",
+      "nombre": "digital literacy workshops taught by our staff",
+      "disponibilidad": "one Saturday a month",
+      "notas": "includes printed material and 10 laptops from the digital room"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "volunteers for the children's reading workshop",
+      "frecuencia": "weekly",
+      "urgencia": "media"
+    },
+    {
+      "id": "N2",
+      "descripcion": "refreshments for community events",
+      "frecuencia": "occasional",
+      "urgencia": "baja"
+    }
+  ]
+}

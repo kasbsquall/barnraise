@@ -1,0 +1,35 @@
+{
+  "org_id": "san-martin-school",
+  "nombre": "San Martin School",
+  "tipo": "school",
+  "descripcion": "Public primary school with 350 pupils. Runs a community service programme for final year students.",
+  "poblacion_atendida": 350,
+  "recursos": [
+    {
+      "id": "R1",
+      "nombre": "student volunteers from the community service programme",
+      "disponibilidad": "Friday afternoons",
+      "notas": "groups of 5 to 10 students supervised by a teacher"
+    },
+    {
+      "id": "R2",
+      "nombre": "large classroom for 40 people, fit for training",
+      "disponibilidad": "Saturday mornings",
+      "notas": "whiteboard, projector and its own street entrance"
+    }
+  ],
+  "necesidades": [
+    {
+      "id": "N1",
+      "descripcion": "digital literacy workshops for parents",
+      "frecuencia": "monthly",
+      "urgencia": "media"
+    },
+    {
+      "id": "N2",
+      "descripcion": "refreshments for pupils on extended school days",
+      "frecuencia": "weekly",
+      "urgencia": "alta"
+    }
+  ]
+}

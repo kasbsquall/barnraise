@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+ledger/*.db
+validation/*.err
+validation/*.log
+.playwright-mcp/
+generated/
+*.orig.png

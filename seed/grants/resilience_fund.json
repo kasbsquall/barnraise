@@ -1,0 +1,48 @@
+{
+  "id": "CRF-2026-11",
+  "nombre": "Community Resilience Fund 2026",
+  "financiador": "Municipal Local Development Foundation",
+  "monto": 45000,
+  "moneda": "USD",
+  "cierre": "2026-10-15",
+  "descripcion": "Funds projects that strengthen food and educational security in a single territory. Priority is given to proposals from several organizations that already work together.",
+  "requisitos": [
+    {
+      "id": "REQ1",
+      "descripcion": "Serve at least 1000 people in the same district, counted together",
+      "tipo": "poblacion",
+      "poblacion_minima": 1000
+    },
+    {
+      "id": "REQ2",
+      "descripcion": "Have transport capacity of your own for distribution",
+      "tipo": "capacidad",
+      "palabras_clave": ["van", "transport", "delivery"]
+    },
+    {
+      "id": "REQ3",
+      "descripcion": "Have refrigerated storage for perishable food",
+      "tipo": "capacidad",
+      "palabras_clave": ["cold room", "refrigerated", "cold storage"]
+    },
+    {
+      "id": "REQ4",
+      "descripcion": "Have physical space for training and workshops",
+      "tipo": "capacidad",
+      "palabras_clave": ["classroom", "community room", "training"]
+    },
+    {
+      "id": "REQ5",
+      "descripcion": "Have an educational component aimed at the community",
+      "tipo": "capacidad",
+      "palabras_clave": ["workshops", "literacy", "reading", "students"]
+    },
+    {
+      "id": "REQ6",
+      "descripcion": "Show documented prior collaboration between the applying organizations",
+      "tipo": "colaboracion",
+      "acuerdos_minimos": 3,
+      "organizaciones_minimas": 3
+    }
+  ]
+}

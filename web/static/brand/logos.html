@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Barnraise · logo options</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1c1a17; --paper:#faf8f3; --rust:#a8431f; --faint:#9a938a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font-family:"Bricolage Grotesque",sans-serif; padding:48px; }
+  h1 { font-size:20px; letter-spacing:-0.02em; margin:0 0 4px; }
+  .sub { font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--faint); margin:0 0 40px; }
+  .row { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-bottom:44px; }
+  .card { border:1px solid rgba(28,26,23,.10); border-radius:4px; overflow:hidden; }
+  .card__top { padding:36px 28px; display:flex; align-items:center; justify-content:center; min-height:150px; }
+  .card__meta { border-top:1px solid rgba(28,26,23,.08); padding:14px 18px; }
+  .name { font-size:15px; font-weight:600; }
+  .desc { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint); line-height:1.5; margin-top:4px; }
+  .dark { background:#16150f; }
+  .dark .card__meta { border-color:rgba(250,248,243,.10); }
+  .dark .name { color:#faf8f3; }
+  .lockup { display:flex; align-items:center; gap:12px; }
+  .word { font-size:26px; font-weight:700; letter-spacing:-0.035em; }
+  .sizes { display:flex; align-items:center; gap:26px; }
+  .label { font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--faint);
+           text-transform:uppercase; letter-spacing:.12em; margin-bottom:14px; }
+</style>
+</head>
+<body>
+
+<h1>Barnraise · three logo directions</h1>
+<p class="sub">monoline SVG · ink #1c1a17 · rust #a8431f · each shown as mark, lockup, dark, and at 20px</p>
+
+<!-- ============ ROW 1: the marks ============ -->
+<p class="label">The mark</p>
+<div class="row">
+
+  <div class="card">
+    <div class="card__top">
+      <!-- A · THE RAISING: a roof truss going up, one beam still tilting into place -->
+      <svg width="104" height="104" viewBox="0 0 64 64" fill="none" stroke="#1c1a17"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 50 L32 18 L56 50"/>
+        <path d="M18 36 L46 36"/>
+        <path d="M32 18 L32 50"/>
+        <path d="M8 50 L56 50" stroke="#a8431f"/>
+      </svg>
+    </div>
+    <div class="card__meta">
+      <p class="name">A · The Raising</p>
+      <p class="desc">The roof truss itself. Ground line in rust: the<br>shared floor everyone stands on.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__top">
+      <!-- B · THE WEAVE: three threads knotting; thickness = collaboration -->
+      <svg width="104" height="104" viewBox="0 0 64 64" fill="none" stroke="#1c1a17"
+           stroke-linecap="round">
+        <path d="M32 10 L12 46" stroke-width="2"/>
+        <path d="M32 10 L52 46" stroke-width="3.5"/>
+        <path d="M12 46 L52 46" stroke-width="2"/>
+        <circle cx="32" cy="10" r="4" fill="#faf8f3" stroke-width="2"/>
+        <circle cx="12" cy="46" r="4" fill="#faf8f3" stroke-width="2"/>
+        <circle cx="52" cy="46" r="4" fill="#a8431f" stroke="#a8431f" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="card__meta">
+      <p class="name">B · The Weave</p>
+      <p class="desc">Three orgs, and the thread thickens where they<br>have worked together. It is the product's map.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__top">
+      <!-- C · THE SIGNATURE: two marks meeting; the agreement needs both -->
+      <svg width="104" height="104" viewBox="0 0 64 64" fill="none" stroke="#1c1a17"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 40 C10 22 22 14 32 26"/>
+        <path d="M54 24 C54 42 42 50 32 38" stroke="#a8431f"/>
+        <path d="M32 26 L32 38"/>
+      </svg>
+    </div>
+    <div class="card__meta">
+      <p class="name">C · The Signature</p>
+      <p class="desc">Two strokes from opposite sides meeting in the<br>middle. Neither is complete alone.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ROW 2: lockups ============ -->
+<p class="label">Lockup</p>
+<div class="row">
+  <div class="card"><div class="card__top"><div class="lockup">
+    <svg width="34" height="34" viewBox="0 0 64 64" fill="none" stroke="#1c1a17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 50 L32 18 L56 50"/><path d="M18 36 L46 36"/><path d="M32 18 L32 50"/><path d="M8 50 L56 50" stroke="#a8431f"/>
+    </svg><span class="word">Barnraise</span></div></div>
+    <div class="card__meta"><p class="desc">A · reads as structure and shelter</p></div>
+  </div>
+
+  <div class="card"><div class="card__top"><div class="lockup">
+    <svg width="34" height="34" viewBox="0 0 64 64" fill="none" stroke="#1c1a17" stroke-linecap="round">
+      <path d="M32 10 L12 46" stroke-width="3"/><path d="M32 10 L52 46" stroke-width="5"/><path d="M12 46 L52 46" stroke-width="3"/>
+      <circle cx="32" cy="10" r="5" fill="#faf8f3" stroke-width="3"/><circle cx="12" cy="46" r="5" fill="#faf8f3" stroke-width="3"/>
+      <circle cx="52" cy="46" r="5" fill="#a8431f" stroke="#a8431f" stroke-width="3"/>
+    </svg><span class="word">Barnraise</span></div></div>
+    <div class="card__meta"><p class="desc">B · reads as network and record</p></div>
+  </div>
+
+  <div class="card"><div class="card__top"><div class="lockup">
+    <svg width="34" height="34" viewBox="0 0 64 64" fill="none" stroke="#1c1a17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 40 C10 22 22 14 32 26"/><path d="M54 24 C54 42 42 50 32 38" stroke="#a8431f"/><path d="M32 26 L32 38"/>
+    </svg><span class="word">Barnraise</span></div></div>
+    <div class="card__meta"><p class="desc">C · reads as agreement and hands</p></div>
+  </div>
+</div>
+
+<!-- ============ ROW 3: dark + tiny ============ -->
+<p class="label">On dark, and at favicon size</p>
+<div class="row">
+  <div class="card dark"><div class="card__top"><div class="sizes">
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 50 L32 18 L56 50"/><path d="M18 36 L46 36"/><path d="M32 18 L32 50"/><path d="M8 50 L56 50" stroke="#e0704a"/>
+    </svg>
+    <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 50 L32 18 L56 50"/><path d="M18 36 L46 36"/><path d="M8 50 L56 50" stroke="#e0704a"/>
+    </svg></div></div>
+    <div class="card__meta"><p class="name">A</p><p class="desc">survives 20px; inner beam dropped</p></div>
+  </div>
+
+  <div class="card dark"><div class="card__top"><div class="sizes">
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-linecap="round">
+      <path d="M32 10 L12 46" stroke-width="2.4"/><path d="M32 10 L52 46" stroke-width="4"/><path d="M12 46 L52 46" stroke-width="2.4"/>
+      <circle cx="32" cy="10" r="4.5" fill="#16150f" stroke-width="2.4"/><circle cx="12" cy="46" r="4.5" fill="#16150f" stroke-width="2.4"/>
+      <circle cx="52" cy="46" r="4.5" fill="#e0704a" stroke="#e0704a" stroke-width="2.4"/>
+    </svg>
+    <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-linecap="round">
+      <path d="M32 10 L12 46" stroke-width="5"/><path d="M32 10 L52 46" stroke-width="8"/><path d="M12 46 L52 46" stroke-width="5"/>
+    </svg></div></div>
+    <div class="card__meta"><p class="name">B</p><p class="desc">at 20px the nodes fill in; keep threads only</p></div>
+  </div>
+
+  <div class="card dark"><div class="card__top"><div class="sizes">
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 40 C10 22 22 14 32 26"/><path d="M54 24 C54 42 42 50 32 38" stroke="#e0704a"/><path d="M32 26 L32 38"/>
+    </svg>
+    <svg width="20" height="20" viewBox="0 0 64 64" fill="none" stroke="#faf8f3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 40 C10 22 22 14 32 26"/><path d="M54 24 C54 42 42 50 32 38" stroke="#e0704a"/>
+    </svg></div></div>
+    <div class="card__meta"><p class="name">C</p><p class="desc">most distinctive small; reads as a knot</p></div>
+  </div>
+</div>
+
+</body>
+</html>
