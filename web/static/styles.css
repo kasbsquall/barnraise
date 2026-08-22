@@ -460,8 +460,13 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
 /* ---------- responsive ---------- */
 @media (max-width: 68rem) {
   .network { grid-template-columns: minmax(0, 1fr); }
-  .entry { grid-template-columns: 3rem minmax(0, 1fr); }
-  .entry__sign { grid-column: 2; justify-content: flex-start; }
+  /* Every part of the row after the number belongs in the content column. Only
+     .entry__sign was moved, so the counterparty's half of each agreement landed
+     inside the 3rem number track and wrapped to one word per line: a single row
+     measured 965px tall and the page 7,365px. */
+  .entry { grid-template-columns: 3rem minmax(0, 1fr); row-gap: var(--s-3); }
+  .entry__side, .entry__sign { grid-column: 2; }
+  .entry__sign { justify-content: flex-start; }
   .req { grid-template-columns: 3.5rem minmax(0, 1fr); }
   .req__who { grid-column: 2; }
 }

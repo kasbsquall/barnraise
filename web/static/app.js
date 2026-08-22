@@ -282,10 +282,18 @@ function renderLedger() {
   const box = $("#ledger");
   box.replaceChildren();
 
-  const fulfilled = state.acuerdos.filter((a) => a.estado === "cumplido").length;
+  // Three states, not two. An agreement both organizations signed but that has
+  // not been delivered yet is "aprobado", and counting only "cumplido" and
+  // "propuesto" made the headline read "5 entries · 4 fulfilled · 0 awaiting",
+  // which does not add up and hides the very agreement the agents just produced.
+  const delivered = state.acuerdos.filter((a) => a.estado === "cumplido").length;
+  const signed = state.acuerdos.filter((a) => a.estado === "aprobado").length;
   const waiting = state.acuerdos.filter((a) => a.estado === "propuesto").length;
-  $("#ledger-legend").textContent =
-    `${state.acuerdos.length} entries · ${fulfilled} fulfilled · ${waiting} awaiting a signature`;
+  const parts = [`${state.acuerdos.length} agreement${state.acuerdos.length === 1 ? "" : "s"}`];
+  if (delivered) parts.push(`${delivered} delivered`);
+  if (signed) parts.push(`${signed} signed, not yet delivered`);
+  if (waiting) parts.push(`${waiting} awaiting a signature`);
+  $("#ledger-legend").textContent = parts.join(" · ");
 
   if (!state.acuerdos.length) {
     const empty = el("p", "empty");
@@ -760,6 +768,13 @@ $("#identity").addEventListener("click", () => {
   const ids = state ? state.organizaciones.map((o) => o.org_id) : [];
   if (!ids.length) return;
   me = ids[(ids.indexOf(me) + 1) % ids.length];
+  // The acknowledgement is written in the first person, so it belongs to the
+  // director who acted. Leaving it up after a switch put "You signed as Luis
+  // Mendoza" on Ana Torres's screen, on the one screen whose whole job is to
+  // make clear that a signature belongs to one organization.
+  const ack = $("#ack");
+  ack.hidden = true;
+  ack.replaceChildren();
   render();
 });
 
