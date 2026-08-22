@@ -97,9 +97,17 @@ for tool, name in zip(tools, names):
 
 check("at least one tool answered", len(outputs) > 0, True)
 
+# Whole words, not substrings. The first version asked whether the neighbor's word
+# appeared anywhere in the output, so "child" from a health post's notes matched
+# inside this library's own "children's reading workshop" and reported a leak that
+# was the agent quoting itself.
+def palabras(texto):
+    return {w.strip(".,;:()'’s").lower() for w in texto.split()}
+
+
 for name, out in outputs:
-    low = out.lower()
-    leaked = {org: sorted(w for w in words if w in low) for org, words in private.items()}
+    dichas = palabras(out)
+    leaked = {org: sorted(words & dichas) for org, words in private.items()}
     leaked = {k: v for k, v in leaked.items() if v}
     check(f"{name} leaks nothing", leaked, {})
 
