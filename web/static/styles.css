@@ -431,6 +431,22 @@ ol, ul, dl { margin: 0; padding: 0; list-style: none; }
   .shell { padding: var(--s-6) var(--s-4) var(--s-16); gap: var(--s-8); }
   .term { grid-template-columns: minmax(0, 1fr); gap: var(--s-1); }
   .fund__head { padding: var(--s-6) var(--s-4); }
-  .topbar { padding: var(--s-3) var(--s-4); }
+
+  /* The top bar carried the identity chip and the live status side by side and
+     ran 110px past the viewport. The status text is the one that can go: the
+     pulsing icon still says a round is running. */
+  .topbar { padding: var(--s-3) var(--s-4); flex-wrap: wrap; }
   .identity__label { display: none; }
+  .identity { min-width: 0; }
+  .identity span:not(.identity__dot) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #live-text { display: none; }
+
+  /* A signature is a commitment between institutions; the button that files one
+     should not be a 40px target on a phone. */
+  .btn--small { min-height: 44px; padding: 0.625rem 0.875rem; }
+  .identity { min-height: 44px; }
+
+  /* The ledger legend is one nowrap line of counts; on a phone it was the single
+     element pushing the document 6px past the viewport. */
+  #ledger-legend { white-space: normal; }
 }
