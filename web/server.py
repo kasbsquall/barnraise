@@ -167,7 +167,7 @@ class RondaRequest(BaseModel):
 @app.post("/api/round/exchange")
 async def iniciar_ronda(req: RondaRequest) -> dict:
     if runner.ocupado():
-        raise HTTPException(409, "Ya hay una ronda en curso.")
+        raise HTTPException(409, "A round is already running.")
     threading.Thread(target=runner.ronda_intercambio, args=(req.org_id,), daemon=True).start()
     return {"iniciada": True}
 
@@ -175,7 +175,7 @@ async def iniciar_ronda(req: RondaRequest) -> dict:
 @app.post("/api/round/coalition")
 async def iniciar_coalicion() -> dict:
     if runner.ocupado():
-        raise HTTPException(409, "Ya hay una ronda en curso.")
+        raise HTTPException(409, "A round is already running.")
     threading.Thread(target=runner.ronda_coalicion, daemon=True).start()
     return {"iniciada": True}
 

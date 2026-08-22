@@ -67,6 +67,28 @@ function enter(node, index = 0, mode = "batch") {
 /* Models answer in markdown and sometimes reach for emoji. Neither belongs on a
    screen where someone is deciding whether to sign something. */
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu;
+/**
+ * Escapes text before it is interpolated into markup.
+ *
+ * This is not a generic precaution. The strings in an agreement are written by
+ * ANOTHER organization's agent, at another endpoint, and travel here as free
+ * text: the neighbor's reply becomes the negotiation, the negotiation becomes
+ * the record_agreement arguments, and those are what the ledger renders. A
+ * hostile or merely careless peer could put an <img onerror> in a resource name
+ * and have it execute in every director's browser, including a script that
+ * answers the very human-approval pause the whole design exists to protect.
+ *
+ * clean() strips emoji and markdown. It never touched a bracket.
+ */
+function esc(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function clean(text) {
   return String(text)
     .replace(EMOJI, "")
@@ -175,8 +197,8 @@ function renderFund() {
         ? `<span class="cap cap--all">${who.includes("acuerdos") ? "the ledger" : "all three together"}</span>`
         : who.split(", ").map((o) => `<span class="cap cap--${routeOf(o)}">${initials(o)}</span>`).join("");
     row.innerHTML =
-      `<span class="req__id">${r.id}</span>` +
-      `<span>${r.descripcion}${r.tipo === "colaboracion" ? ' <span class="label">only Barnraise can prove this</span>' : ""}</span>` +
+      `<span class="req__id">${esc(r.id)}</span>` +
+      `<span>${esc(r.descripcion)}${r.tipo === "colaboracion" ? ' <span class="label">only Barnraise can prove this</span>' : ""}</span>` +
       `<span class="req__who">${caps}</span>`;
     reqs.append(row);
   });
@@ -191,7 +213,7 @@ function renderFund() {
     col.innerHTML =
       `<p class="label">alone</p>` +
       `<p><span class="alone__n">${o.requisitos_cubiertos.length}</span><span class="alone__of"> of ${total}</span></p>` +
-      `<p class="alone__who"><span class="cap cap--${routeOf(o.org_id)}">${initials(o.org_id)}</span> ${o.nombre}</p>`;
+      `<p class="alone__who"><span class="cap cap--${routeOf(o.org_id)}">${esc(initials(o.org_id))}</span> ${o.nombre}</p>`;
     alone.append(col);
   });
   const together = el("div", "alone__col alone--together");
@@ -253,8 +275,8 @@ function renderCoalition() {
     const alreadySigned = state.firmas_coalicion.some((f) => f.coalicion_id === c.id && f.org_id === org);
     row.innerHTML =
       `<span class="cap cap--${routeOf(org)}">${initials(org)}</span>` +
-      `<span><strong>${nameOf(org)}</strong><br><span class="entry__what">${clean(roles[org] || "role to be set")}</span></span>` +
-      `<span class="req__who mono">${(amounts[org] || 0).toLocaleString("en-US")} ${state.convocatoria.moneda}` +
+      `<span><strong>${esc(nameOf(org))}</strong><br><span class="entry__what">${esc(clean(roles[org] || "role to be set"))}</span></span>` +
+      `<span class="req__who mono">${(amounts[org] || 0).toLocaleString("en-US")} ${esc(state.convocatoria.moneda)}` +
       (alreadySigned ? ` ${icon("check")}` : "") + `</span>`;
     if (!alreadySigned && c.estado === "propuesta" && org === me) {
       const b = el("button", "btn btn--small");
@@ -317,16 +339,17 @@ function renderLedger() {
       const sig = state.firmas_acuerdo.find((f) => f.acuerdo_id === a.id && f.org_id === org);
       const on = sig && sig.decision === "aprobado" ? " seal__half--on" : "";
       const title = sig ? `${sig.aprobador} signed` : `${nameOf(org)} has not signed`;
-      return `<span class="seal__half seal__half--${routeOf(org)}${on}" title="${title}">${initials(org)}</span>`;
+      return `<span class="seal__half seal__half--${routeOf(org)}${on}" title="${esc(title)}">${esc(initials(org))}</span>`;
     }).join("");
 
+    item.dataset.id = String(a.id);
     item.innerHTML =
       `<span class="entry__n">#${a.id}</span>` +
-      `<span class="entry__side"><span class="entry__org">${nameOf(a.org_proveedora)}</span> gives<br>` +
-        `<span class="entry__what">${a.recurso_entregado}</span></span>` +
-      `<span class="entry__side"><span class="entry__org">${nameOf(a.org_solicitante)}</span> gives back<br>` +
-        `<span class="entry__what">${a.recurso_recibido}</span>` +
-        `<span class="entry__meta">${a.condiciones}${a.resultado ? " · " + a.resultado : ""}</span></span>` +
+      `<span class="entry__side"><span class="entry__org">${esc(nameOf(a.org_proveedora))}</span> gives<br>` +
+        `<span class="entry__what">${esc(a.recurso_entregado)}</span></span>` +
+      `<span class="entry__side"><span class="entry__org">${esc(nameOf(a.org_solicitante))}</span> gives back<br>` +
+        `<span class="entry__what">${esc(a.recurso_recibido)}</span>` +
+        `<span class="entry__meta">${esc(a.condiciones)}${a.resultado ? " · " + esc(a.resultado) : ""}</span></span>` +
       `<span class="entry__sign"><span class="seal">${seals}</span></span>`;
 
     if (a.estado === "propuesto") {
@@ -497,7 +520,7 @@ function renderMap() {
   legend.replaceChildren();
   state.organizaciones.forEach((o) => {
     const item = el("span", "legend__item");
-    item.innerHTML = `<span class="legend__swatch" style="background:var(--route-${routeOf(o.org_id)})"></span>${o.nombre}`;
+    item.innerHTML = `<span class="legend__swatch" style="background:var(--route-${routeOf(o.org_id)})"></span>${esc(o.nombre)}`;
     legend.append(item);
   });
 }
@@ -519,17 +542,17 @@ function renderOrgs() {
     const card = el("div", "org");
     enter(card, i);
     const things = o.recursos.map((r) =>
-      `<span class="thing">${icon(RESOURCE_ICON(r.nombre))}<span>${r.nombre}<br>` +
-      `<span class="thing__when">${r.disponibilidad}</span></span></span>`).join("");
+      `<span class="thing">${icon(RESOURCE_ICON(r.nombre))}<span>${esc(r.nombre)}<br>` +
+      `<span class="thing__when">${esc(r.disponibilidad)}</span></span></span>`).join("");
     const needs = o.necesidades.map((n) =>
-      `<span class="thing thing--need">${icon(RESOURCE_ICON(n.descripcion))}<span>needs: ${n.descripcion}<br>` +
-      `<span class="thing__when">${n.frecuencia}</span>` +
+      `<span class="thing thing--need">${icon(RESOURCE_ICON(n.descripcion))}<span>needs: ${esc(n.descripcion)}<br>` +
+      `<span class="thing__when">${esc(n.frecuencia)}</span>` +
       `<span class="urg urg--${n.urgencia}">${n.urgencia === "alta" ? "urgent" : n.urgencia === "media" ? "soon" : "when possible"}</span>` +
       `</span></span>`).join("");
     card.innerHTML =
-      `<div class="org__top"><span class="org__name">${o.nombre}</span>` +
+      `<div class="org__top"><span class="org__name">${esc(o.nombre)}</span>` +
       `<span class="org__pop">${o.poblacion.toLocaleString("en-US")}</span></div>` +
-      `<p class="org__dir">${o.director}</p><div class="things">${things}${needs}</div>`;
+      `<p class="org__dir">${esc(o.director)}</p><div class="things">${things}${needs}</div>`;
     box.append(card);
   });
 }
@@ -575,13 +598,48 @@ function renderPending(pending) {
       $("#allclear-detail").textContent =
         `${dirOf(pending.org_id)} at ${nameOf(pending.org_id)} is reviewing an agreement. ` +
         "You will be asked when it reaches your side.";
+      $("#allclear-go").hidden = true;
       return;
     }
+    // An all-clear has to know who is reading it. A pending agreement that is
+    // missing MY signature is the opposite of all-clear: it is the one thing on
+    // the page that only this director can unblock, and it was being reported to
+    // them as a footnote under the words "nothing needs you".
+    const waiting = state.acuerdos.filter((a) => a.estado === "propuesto");
+    const forMe = waiting.filter((a) => {
+      const parties = [a.org_proveedora, a.org_solicitante];
+      if (!parties.includes(me)) return false;
+      return !state.firmas_acuerdo.some(
+        (f) => f.acuerdo_id === a.id && f.org_id === me && f.decision === "aprobado");
+    });
+
+    if (forMe.length) {
+      const first = forMe[0];
+      const other = first.org_proveedora === me ? first.org_solicitante : first.org_proveedora;
+      $("#allclear-icon").setAttribute("href", "#i-clock");
+      $("#allclear-title").textContent =
+        forMe.length === 1
+          ? `Entry #${first.id} is waiting for your signature.`
+          : `${forMe.length} agreements are waiting for your signature.`;
+      $("#allclear-detail").textContent =
+        `${dirOf(other)} at ${nameOf(other)} has signed. It becomes active when you do.`;
+      $("#allclear-go").hidden = false;
+      $("#allclear-go").querySelector("span").textContent = `Go to entry #${first.id}`;
+      $("#allclear-go").onclick = () => {
+        const row = [...document.querySelectorAll("#ledger .entry")]
+          .find((r) => r.dataset.id === String(first.id));
+        if (!row) return;
+        row.scrollIntoView({block: "center", behavior: REDUCE.matches ? "auto" : "smooth"});
+        row.querySelector("button")?.focus();
+      };
+      return;
+    }
+
+    $("#allclear-go").hidden = true;
     $("#allclear-icon").setAttribute("href", "#i-check");
     $("#allclear-title").textContent = "Nothing needs you right now.";
-    const waiting = state.acuerdos.filter((a) => a.estado === "propuesto").length;
-    $("#allclear-detail").textContent = waiting
-      ? `${waiting} agreement${waiting === 1 ? "" : "s"} in the ledger still waiting on a signature.`
+    $("#allclear-detail").textContent = waiting.length
+      ? `${waiting.length} agreement${waiting.length === 1 ? "" : "s"} in the ledger waiting on the other organization.`
       : "Your agent is watching for exchanges in the background.";
     return;
   }
@@ -622,14 +680,14 @@ function acknowledge(what, needsOther) {
   const z = $("#ack");
   z.hidden = false;
   z.className = "ack";
-  z.innerHTML = `${icon("check")}<span>${what}${needsOther ? " It still needs the other organization's signature to become active." : ""}</span>`;
+  z.innerHTML = `${icon("check")}<span>${esc(what)}${needsOther ? " It still needs the other organization's signature to become active." : ""}</span>`;
 }
 
 function showError(message) {
   const z = $("#ack");
   z.hidden = false;
   z.className = "ack ack--error";
-  z.innerHTML = `${icon("warning")}<span>${message}</span>`;
+  z.innerHTML = `${icon("warning")}<span>${esc(message)}</span>`;
   const b = el("button", "btn btn--small");
   b.type = "button";
   b.textContent = "Try again";
@@ -697,9 +755,9 @@ function addEvent(ev, live = false) {
     const to = state?.organizaciones.find((o) => o.nombre === ev.a);
     route.innerHTML =
       `<span class="dot dot--${from ? routeOf(from.org_id) : "lib"}"></span>` +
-      `<span class="label">${ev.de}</span>${icon("arrow")}` +
+      `<span class="label">${esc(ev.de)}</span>${icon("arrow")}` +
       `<span class="dot dot--${to ? routeOf(to.org_id) : "lib"}"></span>` +
-      `<span class="label">${ev.a}</span><span class="label">A2A</span>`;
+      `<span class="label">${esc(ev.a)}</span><span class="label">A2A</span>`;
     if (ev.texto.length > 260) text.classList.add("event__text--clamp");
     typed = clean(ev.texto);
     if (live && from && to) pulseRoute(from.org_id, to.org_id);
@@ -708,7 +766,7 @@ function addEvent(ev, live = false) {
     if (!make) return;
     const [title, detail, milestone] = make(ev);
     if (milestone) item.classList.add("event--milestone");
-    route.innerHTML = `<span class="label">${title}</span>`;
+    route.innerHTML = `<span class="label">${esc(title)}</span>`;
     if (detail.length > 260) text.classList.add("event__text--clamp");
     typed = clean(detail);
   }
@@ -746,17 +804,21 @@ async function decide(decision) {
   const sign = $("#btn-sign"), decline = $("#btn-decline");
   const label = sign.querySelector("span");
   const original = label.textContent;
-  [sign, decline].forEach((b) => b.setAttribute("aria-disabled", "true"));
+  [sign, decline].forEach((b) => { b.setAttribute("aria-disabled", "true"); b.disabled = true; });
   sign.setAttribute("aria-busy", "true");
   label.textContent = decision === "aprobado" ? "Signing…" : "Declining…";
   try {
     await post("/api/round/interrupt", { decision, org_id: me });
+    // Without this the ledger, the counters, the map and the all-clear text all
+    // keep the state from before the signature, so the page tells the director
+    // that nothing needs them while the thing they just signed sits half done.
+    await load().catch(() => {});
     if (decision === "aprobado") acknowledge(`You signed as ${dirOf(me)}.`, true);
     else acknowledge("Declined. Nothing was written to the ledger.", false);
   } catch (e) {
     showError(e.message);
   } finally {
-    [sign, decline].forEach((b) => b.removeAttribute("aria-disabled"));
+    [sign, decline].forEach((b) => { b.removeAttribute("aria-disabled"); b.disabled = false; });
     sign.removeAttribute("aria-busy");
     label.textContent = original;
   }
