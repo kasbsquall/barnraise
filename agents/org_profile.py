@@ -45,6 +45,7 @@ class OrgProfile:
     tipo: str              # "library", "food bank", "school"
     descripcion: str
     poblacion_atendida: int = 0   # people reached per year
+    director: str = "Director"    # the person who signs for this organization
     recursos: list[Resource] = field(default_factory=list)
     necesidades: list[Need] = field(default_factory=list)
     ubicacion: Location | None = None
@@ -58,6 +59,7 @@ class OrgProfile:
             tipo=data["tipo"],
             descripcion=data["descripcion"],
             poblacion_atendida=data.get("poblacion_atendida", 0),
+            director=data.get("director", "Director"),
             recursos=[Resource(**r) for r in data.get("recursos", [])],
             necesidades=[Need(**n) for n in data.get("necesidades", [])],
             ubicacion=Location(**data["ubicacion"]) if data.get("ubicacion") else None,

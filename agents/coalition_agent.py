@@ -113,8 +113,14 @@ def build_coalition_tools(convocatoria: Convocatoria, profiles: list[OrgProfile]
                 aporta = evaluacion.aportes.get(req_id, "")
                 if req_id not in {r["id"] for r in convocatoria.requisitos}:
                     errores.append(f"{req_id} does not exist in this call")
-                elif "suma de" in aporta:
-                    continue  # combined requirement, not attributable to one org
+                elif "together" in aporta or "agreements in the ledger" in aporta:
+                    # A requirement met by the group, not attributable to one org.
+                    # This matched the Spanish "suma de" until the coverage strings
+                    # were translated, and nothing failed loudly: the check simply
+                    # stopped recognising combined requirements and would have
+                    # started reporting that an organization does not contribute
+                    # something no single organization ever could.
+                    continue
                 elif org not in aporta:
                     errores.append(
                         f"{org} does not contribute {req_id}: that requirement is covered by '{aporta}'"

@@ -14,11 +14,6 @@ from agents.tools.grants import Convocatoria
 from ledger import book
 from ledger.evidence import evidencia_de_colaboracion
 
-DIRECTORES = {
-    "central-library": "Ana Torres",
-    "north-food-bank": "Luis Mendoza",
-    "san-martin-school": "Rosa Diaz",
-}
 
 
 def main() -> None:
@@ -45,7 +40,7 @@ def main() -> None:
     finally:
         conn.close()
 
-    print(f"\n--- Evidencia que sustenta la coalicion ---\n{evidencia.resumen()}\n")
+    print(f"\n--- Evidence behind the coalition ---\n{evidencia.resumen()}\n")
 
     agente = build_coalition_agent(convocatoria, profiles)
     result = agente(PROPOSAL_PROMPT.format(
@@ -59,7 +54,7 @@ def main() -> None:
     while result.stop_reason == "interrupt":
         interrupt = result.interrupts[0]
         print("\n" + "=" * 70)
-        print("APROBACION DE LOS DIRECTORES · postulacion conjunta")
+        print("DIRECTORS APPROVE · joint application")
         print("=" * 70)
         print(interrupt.reason)
         if auto:
@@ -83,7 +78,7 @@ def main() -> None:
         print(f"\n--- Firmas requeridas: {len(miembros)} directores ---")
         estado = coalicion["estado"]
         for org_id in miembros:
-            director = DIRECTORES.get(org_id, "Director")
+            director = next((x.director for x in profiles if x.org_id == org_id), "Director")
             if auto:
                 decision = "aprobado"
                 print(f"  {director} ({org_id}): aprobado [--auto-approve]")

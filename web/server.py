@@ -25,14 +25,10 @@ from web import events, runner
 
 STATIC = Path(__file__).parent / "static"
 
-DIRECTORES = {
-    "central-library": "Ana Torres",
-    "north-food-bank": "Luis Mendoza",
-    "san-martin-school": "Rosa Diaz",
-    "riverside-health-post": "Elena Fuentes",
-    "casa-vecinal-kitchen": "Marta Ochoa",
-    "eastside-youth-club": "Diego Salas",
-}
+def _directores() -> dict[str, str]:
+    """Who signs for each organization, read from the profiles rather than from a
+    hand-written copy that has to be remembered when the neighborhood grows."""
+    return {p.org_id: p.director for p in cargar_perfiles()}
 
 app = FastAPI(title="Barnraise")
 
@@ -102,7 +98,7 @@ async def state() -> dict:
             "tipo": p.tipo,
             "descripcion": p.descripcion,
             "poblacion": p.poblacion_atendida,
-            "director": DIRECTORES.get(p.org_id, "Director"),
+            "director": p.director,
             "ubicacion": ({"lat": p.ubicacion.lat, "lon": p.ubicacion.lon,
                            "direccion": p.ubicacion.direccion} if p.ubicacion else None),
             "recursos": [
@@ -246,7 +242,7 @@ async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
             403,
             f"{req.org_id} is not a party to agreement #{acuerdo_id} and cannot sign it.",
         )
-    aprobador = DIRECTORES.get(req.org_id, "Director")
+    aprobador = _directores().get(req.org_id, "Director")
     conn = book.connect()
     try:
         estado = book.registrar_aprobacion(
@@ -270,7 +266,7 @@ async def decidir_acuerdo(acuerdo_id: int, req: DecisionRequest) -> dict:
 async def decidir_coalicion(coalicion_id: int, req: DecisionRequest) -> dict:
     if req.decision not in ("aprobado", "rechazado"):
         raise HTTPException(400, "Invalid decision.")
-    aprobador = DIRECTORES.get(req.org_id, "Director")
+    aprobador = _directores().get(req.org_id, "Director")
     conn = book.connect()
     try:
         estado = book.aprobar_coalicion(

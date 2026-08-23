@@ -381,11 +381,15 @@ def ronda_coalicion() -> None:
         _liberar()
 
 
-DIRECTORES = {
-    "central-library": "Ana Torres",
-    "north-food-bank": "Luis Mendoza",
-    "san-martin-school": "Rosa Diaz",
-}
+def _directores() -> dict[str, str]:
+    """Who signs for each organization, read from the profiles.
+
+    This lived as a hand-written dict in three separate files, and adding three
+    organizations updated one of them. The other two kept falling back to the
+    literal string "Director", so the ledger recorded an anonymous signature on
+    an artifact whose entire purpose is to say which named person agreed to what.
+    """
+    return {p.org_id: p.director for p in _perfiles()}
 
 
 def _ultimo_id_acuerdo() -> int:
@@ -421,12 +425,12 @@ def _firmar_lo_asentado(org_id: str, desde_id: int) -> None:
             return
         estado = book.registrar_aprobacion(
             conn, acuerdo["id"], org_id, "aprobado",
-            DIRECTORES.get(org_id, "Director"),
+            _directores().get(org_id, "Director"),
             "Approved at the agent pause",
         )
         events.publicar(
             "decision", ambito="acuerdo", acuerdo_id=acuerdo["id"], org_id=org_id,
-            aprobador=DIRECTORES.get(org_id, "Director"), decision="aprobado",
+            aprobador=_directores().get(org_id, "Director"), decision="aprobado",
             estado=estado,
         )
     finally:

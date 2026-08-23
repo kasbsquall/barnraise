@@ -202,6 +202,13 @@ function renderIdentity() {
   renderYouAre();
 }
 
+/** Commas and one "and", the way a person writes a list. */
+function lista(xs) {
+  if (xs.length <= 1) return xs[0] || "";
+  if (xs.length === 2) return `${xs[0]} and ${xs[1]}`;
+  return `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+}
+
 /** Where this director stands: what they hold, what they owe, what they are owed. */
 function renderYouAre() {
   const box = $("#youare");
@@ -224,7 +231,7 @@ function renderYouAre() {
       `<li><span class="youare__n">${o.recursos.length}</span> things idle</li>` +
       `<li><span class="youare__n">${o.necesidades.length}</span> needs open</li>` +
       `<li><span class="youare__n">${firmados}</span> signed agreement${firmados === 1 ? "" : "s"}` +
-        (conQuien.size ? ` with ${[...conQuien].map((x) => esc(nameOf(x))).join(" and ")}` : "") + `</li>` +
+        (conQuien.size ? ` with ${lista([...conQuien].map((x) => esc(nameOf(x))))}` : "") + `</li>` +
     `</ul>` +
     (mine.length ? "" : `<p class="hint">No agreements yet, which is why no line reaches this ` +
       `organization on the map. A line is a fulfilled agreement.</p>`);
