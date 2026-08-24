@@ -6,12 +6,21 @@
 > **Why there is a v3.** The v2 storyboard described a transit-style diagram with
 > three organizations at invented coordinates, and quoted an eligibility result
 > that no longer holds. The product has since become a map: six organizations at
-> real addresses, real driving routes between them, and a ledger with nine
+> real addresses, real driving routes between them, and a ledger with seven
 > agreements. Every scene below was rewritten against what runs today, and every
 > figure was re-read from the running system rather than carried over.
 >
 > The footage shot for v2 is unusable for the same reason. It is a recording of
 > an interface that no longer exists.
+
+> **Why the ledger went from nine rows to seven.** Repeated test rounds filed the
+> same library-van-for-food exchange six times. A ledger that accepts one trade
+> over and over documents an agent looping rather than a neighborhood
+> collaborating, so the duplicates were removed and a guard now refuses a trade
+> that is already live between the same two organizations. What remains is seven
+> distinct exchanges, four of them seeded history, and every organization still
+> has at least one. The eligibility figures did not move: no single organization
+> qualifies, four of the twenty trios do, and REQ6 asks for three.
 
 **The sticky line, landed twice (open and close):**
 > Every agent in this sector works inside one organization. This is the first one
@@ -28,7 +37,15 @@ Narrow, JetBrains Mono for data. Thin-stroke icons. No emoji in any frame.
 
 ## Before the camera rolls
 
-- [ ] Six A2A servers on 9001 to 9006, plus the web app on 8080. Verify on camera.
+- [ ] `node video/capture/preflight.js` reports zero problems. Nothing is
+      recorded until it does. It checks the running product at the capture
+      resolution: every organization in frame and clear of the panel, no text
+      clipped or squeezed to one word per line, the activity column following
+      the newest message, the panel agreeing with the phase, no internal ids
+      on screen, no console errors. Four defects reached a rendered scene
+      before this existed.
+- [ ] Six A2A servers on 9001 to 9006, plus the web app on 8080. `launch.ps1`
+      reads the ports from `seed/network.json` and waits for all six to answer.
 - [ ] The negotiating agent on `gemini-3.1-flash-lite`. The local 7B model
       invents inventory: it has offered a health post's "community health
       pamphlets" and a kitchen's transport, neither of which exist. The guards
@@ -145,7 +162,7 @@ line between them gets thicker."
 **Claim → proof.** The row stays uncream after the first signature, on screen,
 and flips only on the second.
 
-**Say out loud, over the ledger:** four of these rows are seeded history and five
+**Say out loud, over the ledger:** four of these rows are seeded history and three
 were negotiated in sessions like this one. The disclosure is on screen anyway;
 saying it is what stops a judge finding it.
 
@@ -184,7 +201,7 @@ requirements of six, and the kitchen covers none. None of them reaches the
 thousand people the fund asks for. Together they cover all six and reach three
 thousand two hundred and fifty. And the requirement nobody can fake is this one:
 documented prior collaboration. It asks for three agreements. The ledger holds
-nine."
+seven."
 
 **Claim → proof.** Every number comes from the deterministic eligibility scan.
 Populations are in the seed profiles; the coverage counts and the total are
@@ -221,7 +238,7 @@ the first one that works between them."
 | Covered together | 6 of 6 | same scan |
 | People reached together | 3,250 | sum of the six seed profiles |
 | Agreements REQ6 asks for | 3 | `acuerdos_minimos` in REQ6 |
-| Agreements in the ledger | 9 | ledger database |
+| Agreements in the ledger | 7 | ledger database |
 | Ports | 9001 to 9006, web on 8080 | `seed/network.json` |
 | Directors | Ana Torres, Luis Mendoza, Rosa Diaz, Elena Fuentes, Marta Ochoa, Diego Salas | `seed/orgs/*.json` |
 
@@ -229,7 +246,7 @@ the first one that works between them."
 
 - That only one coalition qualifies. Four trios do, and the number moves as the
   ledger grows, which is the product working rather than a defect.
-- That the ledger built itself. Four of nine rows are seeded history.
+- That the ledger built itself. Four of seven rows are seeded history.
 - That an agent physically cannot read a neighbor's data. S6 states the actual
   guarantee.
 - That signatures are authenticated. They are not; the checks constrain the

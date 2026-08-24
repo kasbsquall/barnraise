@@ -40,6 +40,9 @@ export const C = {
   food: '#ffb599',
   lib: '#75d4ea',
   school: '#e3c05f',
+  health: '#8ed6a9',
+  kitchen: '#d79ad6',
+  youth: '#9fb0f5',
 
   // cream means an agreement both organizations signed, and appears nowhere else
   signed: '#f0e7d6',
