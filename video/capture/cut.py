@@ -34,7 +34,7 @@ CORTES = {
     # The funding call read from the top down: the amount, the requirements, what
     # each organization covers alone, the whole neighborhood, and held on the
     # collaboration requirement where the last three sentences land.
-    's7': ('s7_raw.webm', [(4.6, 37.36)]),
+    's7': ('s7_raw.webm', [(6.0, 38.76)]),
     's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
     's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }

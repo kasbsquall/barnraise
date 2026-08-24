@@ -36,8 +36,14 @@ const APP = process.env.BARNRAISE_URL || 'http://127.0.0.1:8080';
 // 1.3333 gives 2560x1440. A camera pushing into this reads real captured detail
 // rather than magnifying a 1920 plate, and it is half the file size of 4K for a
 // film delivered at 1080.
-const W = 1920, H = 1080;
+const W = 1920;
 const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
+
+// Most takes are shot at the delivery shape. The grant take is shot TALLER, so
+// the whole funding call lays out at once and nothing has to scroll: see the
+// note in the grant mode.
+const ALTO = {grant: 1680};
+const H = ALTO[process.argv[2]] || 1080;
 
 const mode = process.argv[2];
 const out = process.argv[3];
@@ -223,43 +229,34 @@ async function revisar(page, t, orgId) {
   }
 
   if (mode === 'grant') {
-    // The funding call, read from the top down. Everything the narration says is
-    // in this one view, so the movement is a slow crawl rather than a tour: the
-    // amount first, then the requirements, then what each organization covers
-    // alone, then the whole neighborhood. It ends held on the collaboration
-    // requirement, which is where the last three sentences land.
+    // The funding call, laid out whole and held still.
+    //
+    // It was captured with the page scrolling itself, and that looked wrong for
+    // eighteen seconds. Measured: headless Chromium painted the scroll every one
+    // or two recorded frames in an irregular pattern, mean 1.74, because the page
+    // was rendering at about fourteen frames a second against a twenty-five frame
+    // recording and the ratio is not a whole number. The eye forgives slow and
+    // does not forgive uneven, and nothing inside the browser fixes it.
+    //
+    // So nothing scrolls here. The window is tall enough that the whole call
+    // lays out at once, and the reading down it is a camera move in Remotion,
+    // which renders every frame deterministically.
     await page.evaluate(() => document.querySelector('.view[data-view="fund"]')?.click());
     await sleep(2600);
 
-    const alcance = await page.evaluate(() => {
+    const resto = await page.evaluate(() => {
       const c = document.querySelector('.panel__body');
       return Math.max(0, c.scrollHeight - c.clientHeight);
     });
-    console.log('scroll available:', alcance, 'px');
-
-    // Eased by hand rather than with scroll-behavior, because a smooth scroll is
-    // the browser's curve and this one has to match a sentence.
-    const pasos = 150, desde = 3000, hasta = 21000;
-    const t0 = Date.now();
-    for (let i = 0; i <= pasos; i++) {
-      const objetivo = desde + ((hasta - desde) * i) / pasos;
-      const espera = objetivo - (Date.now() - t0);
-      if (espera > 0) await sleep(espera);
-      const p = i / pasos;
-      const suave = p * p * p * (p * (p * 6 - 15) + 10);
-      await page.evaluate((y) => {
-        const c = document.querySelector('.panel__body');
-        if (c) c.scrollTop = y;
-      }, Math.round(alcance * suave));
-    }
-    await sleep(11000);
+    if (resto > 4) throw new Error(`the panel still scrolls by ${resto}px; make the window taller`);
 
     const visto = await page.evaluate(() => {
       const req = [...document.querySelectorAll('.req')].pop();
       return (req?.innerText || '').replace(/\s+/g, ' ').trim();
     });
-    console.log('held on:', visto);
     if (!/asks for 3/.test(visto)) throw new Error('the collaboration threshold is not on screen');
+    console.log('whole call laid out, nothing scrolls. Last requirement:', visto.slice(0, 70));
+    await sleep(34000);
   }
 
   if (mode === 'round') {

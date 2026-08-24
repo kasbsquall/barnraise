@@ -23,23 +23,32 @@ import {C} from '../theme';
 // threshold that lives only in the seed file makes the verdict unauditable, so
 // the requirement now carries what it demands beside whether it is met.
 
-const PLATE = {w: 2560, h: 1440};
+// The take is shot TALLER than the film, 2560 by 2240, with the whole funding
+// call laid out and nothing scrolling.
+//
+// It was captured with the page scrolling itself first, and that looked wrong for
+// eighteen seconds. Measured on the recording: headless Chromium painted the
+// scroll every one or two recorded frames in an irregular pattern, mean 1.74,
+// because the page rendered at about fourteen frames a second against a
+// twenty-five frame recording and the ratio is not a whole number. The eye
+// forgives slow and does not forgive uneven. Reading down the call is a camera
+// move now, and Remotion renders every frame.
+const PLATE = {w: 2560, h: 2240};
+const FIT = 1920 / PLATE.w;              // 0.75, the same magnification as every other scene
 const DUR = 965;                         // 32.16s at 30fps
 
-const FIN_SCROLL = 630;   // 21.0s · the page stops moving and the reading holds
+const BAJA = 82;          //  2.75s · the reading starts moving down
+const PARA = 570;         // 19.0s · it settles on the coverage and holds
 const REQ6 = 615;         // 20.5s · "the requirement nobody can fake is this one"
 
-// The page scrolls itself for the first two thirds, so the camera holds and lets
-// it. Once the reading settles the camera takes over with a slow drift, because a
-// scene that stops moving eleven seconds before it ends is a still image under a
-// voice still making claims.
-//
-// cx is fixed at 960: at scale 1 the window is 1920 across a 2560 plate, and
-// panning right walks the frame off a panel pinned to the left edge.
+// Holds on the amount, reads down to the coverage, and settles there. At this
+// scale the window is the full plate width and 1440 of its 2240 height, so the
+// travel is 800px and nothing is ever magnified.
 const CAM: Key[] = [
-  {f: 0, cx: 960, cy: 700, s: 1},
-  {f: FIN_SCROLL, cx: 960, cy: 700, s: 1},
-  {f: DUR, cx: 960, cy: 764, s: 1},
+  {f: 0, cx: PLATE.w / 2, cy: 720, s: FIT},
+  {f: BAJA, cx: PLATE.w / 2, cy: 720, s: FIT},
+  {f: PARA, cx: PLATE.w / 2, cy: 1520, s: FIT},
+  {f: DUR, cx: PLATE.w / 2, cy: 1520, s: FIT},
 ];
 
 export const Coalition: React.FC = () => {
@@ -62,7 +71,7 @@ export const Coalition: React.FC = () => {
       <div
         style={{
           position: 'absolute',
-          left: 10, top: 150, width: 680, height: 300,
+          left: 10, top: 230, width: 680, height: 300,
           background: `radial-gradient(closest-side, rgba(6,217,250,${luz * 0.13}), transparent 72%)`,
           filter: 'blur(46px)',
           pointerEvents: 'none',
@@ -72,7 +81,7 @@ export const Coalition: React.FC = () => {
       {/* A sweep as the call arrives, a tick as the reading settles, and one
           accent on the requirement the ledger exists to satisfy. */}
       <Sfx src="whoosh.mp3" at={1} vol={0.18} />
-      <Sfx src="click.mp3" at={FIN_SCROLL} vol={0.07} />
+      <Sfx src="click.mp3" at={PARA} vol={0.07} />
       <Sfx src="confirm.mp3" at={REQ6} vol={0.28} />
     </AbsoluteFill>
   );
