@@ -1,0 +1,54 @@
+{
+ "cierre": {
+  "archivo": "agents/tools/resources.py",
+  "lineas": [
+   "def build_resource_tools(profile: OrgProfile) -> list:",
+   "    @tool",
+   "    def list_idle_resources() -> str:",
+   "        \"\"\"List my organization's idle resources, the ones we could share with neighbors.\"\"\"",
+   "        if not profile.recursos:",
+   "            return \"No idle resources on record this week.\"",
+   "        lineas = [",
+   "            f\"- [{r.id}] {r.nombre} | available: {r.disponibilidad}\" + (f\" | {r.notas}\" if r.notas else \"\")",
+   "            for r in profile.recursos",
+   "        ]",
+   "        return \"\\n\".join(lineas)",
+   "",
+   "    @tool",
+   "    def list_needs() -> str:",
+   "        \"\"\"List what my organization is short of this week.\"\"\"",
+   "        if not profile.necesidades:",
+   "            return \"No needs on record this week.\"",
+   "        traduccion = {\"alta\": \"high\", \"media\": \"medium\", \"baja\": \"low\"}",
+   "        lineas = [",
+   "            f\"- [{n.id}] {n.descripcion} | frequency: {n.frecuencia} | \"",
+   "            f\"urgency: {traduccion.get(n.urgencia, n.urgencia)}\"",
+   "            for n in profile.necesidades",
+   "        ]",
+   "        return \"\\n\".join(lineas)",
+   "",
+   "    return [list_idle_resources, list_needs]"
+  ]
+ },
+ "rechazos": [
+  {
+   "titulo": "the wrong direction",
+   "campo": "recurso_entregado",
+   "valor": "use of the delivery van for collections",
+   "respuesta": "Nothing was filed. 'use of the delivery van for collections' is not one of our organization's resources, so we cannot hand it over. Check the direction: recurso_entregado must be OURS and recurso_recibido must be the neighbor's. Call list_idle_resources if you need to."
+  },
+  {
+   "titulo": "a day nobody negotiated",
+   "campo": "condiciones",
+   "valor": "Thursday from 9am to 1pm",
+   "respuesta": "Nothing was filed. The conditions say 'Thursday from 9am to 1pm', but the day agreed in the negotiation was tuesday. Fix the day and call record_agreement again."
+  },
+  {
+   "titulo": "an organization that is not a party",
+   "peticion": "POST /api/agreements/16/decide",
+   "cuerpo_enviado": "{\"org_id\": \"riverside-health-post\", \"decision\": \"aprobado\"}",
+   "codigo": 403,
+   "respuesta": "riverside-health-post is not a party to agreement #16 and cannot sign it."
+  }
+ ]
+}
