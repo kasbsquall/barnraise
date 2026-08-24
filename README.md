@@ -10,6 +10,10 @@ resulting history into the evidence funders keep asking for.
 Built with the [Strands Agents SDK](https://strandsagents.com/) for the AWS
 Agents for Humans Hackathon, track **Good Neighbor Agents**.
 
+**Try it:** [barnraise.107-172-6-206.sslip.io](https://barnraise.107-172-6-206.sslip.io) · a live demo you can sign an
+agreement on. Running a round is off there because it calls a model; everything
+else, including the signature, is real.
+
 **Watch it work:** [youtube.com/watch?v=sdSvH0PwtYQ](https://www.youtube.com/watch?v=sdSvH0PwtYQ)
 · 2:53 · six agents negotiating, two signatures, and what the product refuses to do.
 

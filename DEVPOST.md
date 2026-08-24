@@ -108,6 +108,7 @@ fastapi · sqlite · maplibre · openstreetmap · osrm · remotion
 
 ## Try it out
 
+- Live demo: https://barnraise.107-172-6-206.sslip.io
 - Demo video: https://www.youtube.com/watch?v=sdSvH0PwtYQ
 - Repository: https://github.com/kasbsquall/barnraise
 - Build write-up: https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking
@@ -145,6 +146,8 @@ afirmación que sería fácil hacer y que no se sostiene.
       montaje dura 2:52,9, así que sobra margen.
 - [x] Vídeo subido: https://www.youtube.com/watch?v=sdSvH0PwtYQ
       Falta pegar el enlace en el formulario de envío.
+- [x] **Demo en vivo desplegada**: https://barnraise.107-172-6-206.sslip.io
+      Va en el campo opcional del formulario; sube Technical Implementation.
 - [ ] **Diagrama de arquitectura**: existe en docs/ARCHITECTURE.md y está enlazado
       desde el README. Repasar que se vea al abrirlo desde el envío.
 - [x] Post de builder.aws.com publicado (0,2 puntos). Falta pegar la URL en el
