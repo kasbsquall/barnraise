@@ -502,10 +502,10 @@ function renderLedger() {
     item.innerHTML =
       `<span class="entry__n">#${a.id}</span>` +
       `<span class="entry__side"><span class="entry__org">${esc(nameOf(a.org_proveedora))}</span> gives<br>` +
-        `<span class="entry__what">${esc(a.recurso_entregado)}</span></span>` +
+        `<span class="entry__what">${esc(clean(a.recurso_entregado))}</span></span>` +
       `<span class="entry__side"><span class="entry__org">${esc(nameOf(a.org_solicitante))}</span> gives back<br>` +
-        `<span class="entry__what">${esc(a.recurso_recibido)}</span>` +
-        `<span class="entry__meta">${esc(a.condiciones)}${a.resultado ? " · " + esc(a.resultado) : ""}</span></span>` +
+        `<span class="entry__what">${esc(clean(a.recurso_recibido))}</span>` +
+        `<span class="entry__meta">${esc(clean(a.condiciones))}${a.resultado ? " · " + esc(clean(a.resultado)) : ""}</span></span>` +
       `<span class="entry__sign">` +
         `<span class="entry__state">${esc(STATE_WORD[a.estado] || a.estado)}</span>` +
         `<span class="seal">${seals}</span></span>` +

@@ -22,6 +22,12 @@
 > has at least one. The eligibility figures did not move: no single organization
 > qualifies, four of the twenty trios do, and REQ6 asks for three.
 
+> **The ledger count is a function of when you capture.** It held seven before
+> this session and the signature filmed in S5 makes it eight, so S7 says eight
+> and shows eight. Re-record S5 and the number moves again: the whole film has to
+> come from one run, or two frames will disagree about one datum and a judge
+> comparing them concludes the output was hand-assembled.
+
 **The sticky line, landed twice (open and close):**
 > Every agent in this sector works inside one organization. This is the first one
 > that works between them.
@@ -159,7 +165,7 @@ is now in force, and the line between those two organizations on the map thicken
 cannot see his decision from the library, and the server refuses her signature if
 she tries. She signs her own side. Only then does the agreement exist, and the
 line between them gets thicker. Four of these rows are seeded history. The other
-three were negotiated in sessions exactly like this one."
+four were negotiated by the agents, in rounds like this one."
 
 **Claim → proof.** The row stays uncream after the first signature, on screen,
 and flips only on the second.
@@ -203,7 +209,7 @@ requirements of six, and the kitchen covers none. None of them reaches the
 thousand people the fund asks for. Together they cover all six and reach three
 thousand two hundred and fifty. And the requirement nobody can fake is this one:
 documented prior collaboration. It asks for three agreements. The ledger holds
-seven."
+eight."
 
 **Claim → proof.** Every number comes from the deterministic eligibility scan.
 Populations are in the seed profiles; the coverage counts and the total are
@@ -240,7 +246,7 @@ the first one that works between them."
 | Covered together | 6 of 6 | same scan |
 | People reached together | 3,250 | sum of the six seed profiles |
 | Agreements REQ6 asks for | 3 | `acuerdos_minimos` in REQ6 |
-| Agreements in the ledger | 7 | ledger database |
+| Agreements in the ledger | 8 | ledger database, after the signature S5 films |
 | Ports | 9001 to 9006, web on 8080 | `seed/network.json` |
 | Directors | Ana Torres, Luis Mendoza, Rosa Diaz, Elena Fuentes, Marta Ochoa, Diego Salas | `seed/orgs/*.json` |
 

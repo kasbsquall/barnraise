@@ -14,6 +14,9 @@ video/footage/
 video/audio/*.wav
 video/audio/*.mp3
 video/audio/vo/
+# The mixed bed is 33MB and derived: audio/mix.py rebuilds it from the Suno
+# track and the narration clips, neither of which belongs in the repo either.
+video/remotion/public/mix.wav
 video/capture/mp4/
 video/capture/qa/
 video/capture/node_modules/

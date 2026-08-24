@@ -67,16 +67,16 @@
   "id": "s5",
   "titulo": "TWO SIGNATURES",
   "slot": 36,
-  "vo": "Nothing executes on one signature. Luis signs from the food bank. Ana cannot see his decision from the library, and the server refuses her signature if she tries. She signs her own side. Only then does the agreement exist, and the line between them gets thicker. Four of these rows are seeded history. The other three were negotiated in sessions exactly like this one.",
+  "vo": "Nothing executes on one signature. Luis signs from the food bank. Ana cannot see his decision from the library, and the server refuses her signature if she tries. She signs her own side. Only then does the agreement exist, and the line between them gets thicker. Four of these rows are seeded history. The other four were negotiated by the agents, in rounds like this one.",
   "est": 29.1,
-  "vo_dur": 28.7,
+  "vo_dur": 26.94,
   "lead": 0.6,
   "tail": 4.0,
-  "dur": 33.3,
+  "dur": 31.54,
   "start": 75.84,
-  "end": 109.14,
+  "end": 107.38,
   "startF": 2275,
-  "durF": 999,
+  "durF": 946,
   "voStart": 76.44
  },
  {
@@ -89,27 +89,27 @@
   "lead": 0.5,
   "tail": 1.2,
   "dur": 20.46,
-  "start": 109.14,
-  "end": 129.6,
-  "startF": 3274,
+  "start": 107.38,
+  "end": 127.84,
+  "startF": 3221,
   "durF": 614,
-  "voStart": 109.64
+  "voStart": 107.88
  },
  {
   "id": "s7",
   "titulo": "THE COALITION",
   "slot": 25,
-  "vo": "Then a funding call appears. Alone, the strongest of them covers three requirements of six, and the kitchen covers none. None of them reaches the thousand people the fund asks for. Together they cover all six and reach three thousand two hundred and fifty. And the requirement nobody can fake is this one: documented prior collaboration. It asks for three agreements. The ledger holds seven.",
+  "vo": "Then a funding call appears. Alone, the strongest of them covers three requirements of six, and the kitchen covers none. None of them reaches the thousand people the fund asks for. Together they cover all six and reach three thousand two hundred and fifty. And the requirement nobody can fake is this one: documented prior collaboration. It asks for three agreements. The ledger holds eight.",
   "est": 29.5,
-  "vo_dur": 29.54,
+  "vo_dur": 30.46,
   "lead": 0.5,
   "tail": 1.2,
-  "dur": 31.24,
-  "start": 129.6,
-  "end": 160.84,
-  "startF": 3888,
-  "durF": 937,
-  "voStart": 130.1
+  "dur": 32.16,
+  "start": 127.84,
+  "end": 160.0,
+  "startF": 3835,
+  "durF": 965,
+  "voStart": 128.34
  },
  {
   "id": "s8",
@@ -121,10 +121,10 @@
   "lead": 0.4,
   "tail": 3.2,
   "dur": 11.73,
-  "start": 160.84,
-  "end": 172.57,
-  "startF": 4825,
+  "start": 160.0,
+  "end": 171.73,
+  "startF": 4800,
   "durF": 352,
-  "voStart": 161.24
+  "voStart": 160.4
  }
 ]

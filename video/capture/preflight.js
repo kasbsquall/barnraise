@@ -101,6 +101,15 @@ function auditar() {
   const bajoElPliegue = cuerpo
     ? Math.max(0, cuerpo.scrollHeight - cuerpo.clientHeight) : 0;
 
+  // Internal resource and need ids belong to the seed profiles, not to a
+  // person reading the screen. The agents echo them back and they have
+  // reached the panel as "[N1]", "(R1)" and bare "N1".
+  const panelTexto = [...document.querySelectorAll('.view-pane')]
+    .filter((x) => !x.hidden).map((x) => x.textContent || '').join(' ')
+    + ' ' + (document.querySelector('#decision-terms')?.textContent || '');
+  const idsVisibles = [...new Set(
+    panelTexto.match(/(^|[\s[(])(R|N|REQ)\d+\b/g) || [])].map((x) => x.trim());
+
   const feed = document.querySelector('#feed');
   let feedInfo = null;
   if (feed && visible(feed)) {
@@ -116,7 +125,7 @@ function auditar() {
   }
 
   return {
-    vp, pins, flotantes, recortados, apretados, bajoElPliegue, feedInfo,
+    vp, pins, flotantes, recortados, apretados, bajoElPliegue, feedInfo, idsVisibles,
     panelBox,
     fueraDeCuadro: pins.filter((p) =>
       p.top < 0 || p.bottom > vp.h || p.left < 0 || p.right > vp.w).map((p) => p.id),
@@ -143,6 +152,8 @@ function revisarVista(nombre, a) {
     fail(nombre, `text is clipped in .${r.sel}: box ${r.box}px, needs ${r.need}px — "${r.t}"`);
   for (const c of a.apretados)
     fail(nombre, `.${c.sel} is ${c.w}px wide and breaks to about one word per line — "${c.t}"`);
+  for (const id of a.idsVisibles)
+    fail(nombre, `the internal id "${id}" is showing to the reader`);
   if (a.bajoElPliegue > 0)
     notas.push(`${nombre}: ${a.bajoElPliegue}px below the fold, reachable by scrolling`);
 
@@ -225,19 +236,6 @@ function revisarVista(nombre, a) {
       fail('banner', `phase is "${fin.fase}" but the panel says "${fin.banner.titulo}"`);
     notas.push(`banner: phase "${fin.fase}", panel says "${fin.banner.titulo}"`);
   }
-
-  // Internal resource and need ids belong to the seed profiles, not to a person
-  // reading the screen. The agents echo them back and they have reached the panel
-  // as "[N1]", "(R1)" and bare "N1".
-  const idsVisibles = await page.evaluate(() => {
-    const t = document.querySelector('#decision-terms')?.textContent || '';
-    return (t.match(/(^|[\s[(])(R|N|REQ)\d+\b/g) || []).map((x) => x.trim());
-  });
-  if (idsVisibles.length)
-    fail('terms', `internal ids are showing to the reader: ${idsVisibles.join(', ')}`);
-
-  if (errores.length)
-    errores.slice(0, 5).forEach((e) => fail('console', e.slice(0, 160)));
 
   await browser.close();
 

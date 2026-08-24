@@ -6,49 +6,48 @@ import {C, MONO} from '../theme';
 
 // S4 · The agents talk.
 //
-// One continuous take of the running product. The messages in the activity feed
-// are what the agents wrote to each other over A2A during this round, typed in as
-// they arrived, and each one crosses the map along the road it would actually
-// take. This is the same round whose terms the next scene signs.
+// One take of the running product. What types into the activity column is what
+// the agents wrote to each other over A2A during this round, and each message
+// crosses the map along the road it would actually take. The round this filmed
+// is the round the next scene signs.
 //
 // The camera holds. Three treatments were built for an earlier cut and two of
 // them destroyed information: pushing into the feed cropped the map out of a
 // scene whose subject is the map, and the wide push sliced nine lines of body
-// copy down the left edge. Two independent reviewers picked the held frame, and
-// it is the only one that keeps the brand, the identity, the live phase, the
-// whole map and the panel legible at once.
+// copy down the left edge. The held frame is the only one that keeps the brand,
+// the identity, the live phase, the whole map and the panel legible at once.
 
-const PLATE = {w: 2560, h: 1440};        // captured at 2K and shown at 1080
+const PLATE = {w: 2560, h: 1440};        // captured at 2K, delivered at 1080
 const PAGE = {cx: PLATE.w / 2, cy: PLATE.h / 2};
-const FIT = 1920 / PLATE.w;              // 0.75: the whole plate fills the frame
-const DUR = 961;                         // 32.03s at 30fps
+const FIT = 1920 / PLATE.w;              // 0.75: the plate fills the frame exactly
+const DUR = 942;                         // 31.40s at 30fps, from the measured narration
 
-// Frames where the activity column actually changes, measured off the encoded
-// clip rather than estimated. (video/capture, feed_cues)
-const CUES = [4, 157, 281, 311, 384, 626, 780, 933];
+// Measured on the encoded cut by watching the feed column's own brightness step
+// when the milestone row paints, not estimated off the source timeline.
+const JOIN = 780;       // 26.0s · the concealed cut into the terms being struck
+const MATCH = 912;      // 30.4s · TERMS CLOSED lands, and the scene hands off
 
-// The one beat: the frame where the agents find the match. Everything else is a
-// message arriving; this is the round reaching its point, and an earlier cut ran
-// twenty-nine seconds without ever containing it.
-const MATCH = 626;
-
-// A message also crosses the map, which takes about a second, so the arrival
-// lands 30 frames after it leaves. Clamped inside the scene.
-const ARRIVALS = CUES.map((f) => f + 30).filter((f) => f < DUR - 2);
-
+// Exactly FIT, and nothing moves.
+//
+// A 3% overscan was here to give the shot ambient life, and it cropped 3% off
+// every edge: the wordmark lost its top and the live phase indicator lost its
+// last characters. The capture is the product filling the frame edge to edge, so
+// there is no margin to spend on a camera. The life in this scene is the
+// messages typing and the pulses crossing the map, which is real motion rather
+// than a camera pretending.
 const HELD: Key[] = [
   {f: 0, cx: PAGE.cx, cy: PAGE.cy, s: FIT},
-  {f: DUR, cx: PAGE.cx, cy: PAGE.cy + 10, s: FIT * 1.025},
+  {f: DUR, cx: PAGE.cx, cy: PAGE.cy, s: FIT},
 ];
 
 export const Agents: React.FC = () => {
   const frame = useCurrentFrame();
 
   const beat = interpolate(
-    frame, [MATCH, MATCH + 14, MATCH + 170, MATCH + 210], [0, 1, 1, 0],
+    frame, [MATCH - 4, MATCH + 10], [0, 1],
     {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
   );
-  const portsIn = interpolate(frame, [170, 205], [0, 1], {
+  const portsIn = interpolate(frame, [150, 186], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
   });
 
@@ -56,43 +55,42 @@ export const Agents: React.FC = () => {
     <AbsoluteFill style={{backgroundColor: C.field}}>
       <Camera2D keys={HELD} plate={PLATE}>
         <OffthreadVideo
-          src={staticFile('vid/s4_round.mp4')}
+          src={staticFile('vid/s4_cut.mp4')}
           muted
           style={{width: PLATE.w, height: PLATE.h}}
         />
       </Camera2D>
 
-      {/* A pool of light behind the activity column when the match lands. Placed
-          over the plate rather than inside the camera so the scale creep cannot
-          drag it. */}
+      {/* One pool of light, behind the one thing that matters, at the moment it
+          matters. Sits over the plate rather than inside the camera so the
+          translation cannot drag it off its target. */}
       <div
         style={{
           position: 'absolute',
-          left: 30, top: 470, width: 520, height: 240,
-          background: `radial-gradient(closest-side, rgba(117,212,234,${beat * 0.24}), transparent 72%)`,
-          filter: 'blur(34px)',
+          left: 24, top: 700, width: 560, height: 320,
+          background: `radial-gradient(closest-side, rgba(117,212,234,${beat * 0.22}), transparent 72%)`,
+          filter: 'blur(38px)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* The protocol, named. Sits in the empty quarter of the map. */}
+      {/* Six real processes, in the organizations' own colours.
+          The narration already says the agents reach each other over A2A across
+          process boundaries, so the words that said that again are gone; the
+          port numbers are the part a viewer cannot hear. It sits under the
+          disclosure in the top right, which is the only band of the map that
+          holds no pin and no route. It used to run through the Eastside Youth
+          Club marker. */}
       <div
         style={{
-          position: 'absolute', right: 84, bottom: 96, width: 470,
+          position: 'absolute', right: 84, top: 182,
           textAlign: 'right',
           opacity: portsIn,
-          transform: `translateY(${(1 - portsIn) * 10}px)`,
+          transform: `translateY(${(1 - portsIn) * 8}px)`,
           fontFamily: MONO,
         }}
       >
-        <div style={{height: 1, background: C.rule, transform: `scaleX(${portsIn})`, transformOrigin: 'right'}} />
-        <div style={{marginTop: 18, fontSize: 19, letterSpacing: '0.14em', color: C.inkFaint}}>
-          A2A · AGENT TO AGENT
-        </div>
-        <div style={{marginTop: 12, fontSize: 22, lineHeight: 1.5, color: C.inkSoft}}>
-          six organizations, six processes, six ports
-        </div>
-        <div style={{marginTop: 16, display: 'flex', gap: 22, fontSize: 26, justifyContent: 'flex-end'}}>
+        <div style={{display: 'flex', gap: 20, fontSize: 24, justifyContent: 'flex-end'}}>
           <span style={{color: C.lib}}>9001</span>
           <span style={{color: C.food}}>9002</span>
           <span style={{color: C.school}}>9003</span>
@@ -100,20 +98,20 @@ export const Agents: React.FC = () => {
           <span style={{color: C.kitchen}}>9005</span>
           <span style={{color: C.youth}}>9006</span>
         </div>
+        <div style={{marginTop: 8, fontSize: 17, letterSpacing: '0.14em', color: C.inkFaint}}>
+          ONE PROCESS PER ORGANIZATION
+        </div>
       </div>
 
-      {/* Sound. A sweep to open, a tick under each row that lands, a quieter one
-          when its pulse reaches the other station, and one accent on the match.
-          The accent is louder than the punctuation around it: the arrival is the
-          event, the sweep is only saying the shot changed. */}
-      <Sfx src="whoosh.mp3" at={1} vol={0.24} />
-      {CUES.filter((f) => f !== MATCH).map((f) => (
-        <Sfx key={f} src="pop.mp3" at={f} vol={0.1} />
+      {/* Sound. A sweep to open, a tick under each message that lands, and one
+          accent on the match. The accent is louder than the punctuation around
+          it: the arrival is the event, the sweep only says the shot changed. */}
+      <Sfx src="whoosh.mp3" at={1} vol={0.2} />
+      {[30, 200, 410, 570, 710, 880].map((f) => (
+        <Sfx key={f} src="pop.mp3" at={f} vol={0.085} />
       ))}
-      {ARRIVALS.filter((f) => f !== MATCH + 30).map((f) => (
-        <Sfx key={`a${f}`} src="click.mp3" at={f} vol={0.085} />
-      ))}
-      <Sfx src="confirm.mp3" at={MATCH} vol={0.4} />
+      <Sfx src="click.mp3" at={JOIN} vol={0.07} />
+      <Sfx src="confirm.mp3" at={MATCH} vol={0.34} />
     </AbsoluteFill>
   );
 };
