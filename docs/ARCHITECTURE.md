@@ -3,7 +3,9 @@
 ## The idea in one diagram
 
 Every organization runs its own agent over its own private data. Agents talk to
-each other across organizational boundaries using the A2A protocol. Nothing is
+each other across organizational boundaries using the A2A protocol. Six
+organizations run as six processes on ports 9001 to 9006; whichever one starts a
+round acts as the client for it, and the rest answer from their own servers. Nothing is
 committed without human approval, and every approved agreement is written to a
 shared ledger that later becomes grant evidence.
 
@@ -11,11 +13,18 @@ shared ledger that later becomes grant evidence.
 flowchart TB
     subgraph BARRIO["Layer 1 · the daily exchange"]
         direction LR
-        LIB["Community Library agent<br/><i>own private profile</i><br/>A2A server :9001"]
-        FB["North Food Bank agent<br/><i>own private profile</i><br/>A2A client"]
-        SCH["San Martin School agent<br/><i>own private profile</i><br/>A2A server :9003"]
-        LIB <-->|"A2A: offers, counter-offers, terms"| FB
-        FB <-->|"A2A"| SCH
+        LIB["Central Library agent<br/><i>own private profile</i><br/>A2A :9001"]
+        FB["North Food Bank agent<br/><i>own private profile</i><br/>A2A :9002"]
+        SCH["San Martin School agent<br/><i>own private profile</i><br/>A2A :9003"]
+        RH["Riverside Health Post agent<br/><i>own private profile</i><br/>A2A :9004"]
+        CV["Casa Vecinal Kitchen agent<br/><i>own private profile</i><br/>A2A :9005"]
+        EY["Eastside Youth Club agent<br/><i>own private profile</i><br/>A2A :9006"]
+        FB <-->|"A2A: offers, counter-offers, terms"| LIB
+        FB <--> SCH
+        FB <--> CV
+        FB <--> EY
+        LIB <--> SCH
+        LIB <--> RH
     end
 
     BARRIO --> GATE{{"Human approval · both parties<br/>Strands interrupt"}}

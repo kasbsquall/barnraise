@@ -122,7 +122,8 @@ python seed/seed_history.py --reset
 
 Start the organizations as A2A servers, each in its own process. Any organization
 you want to start a round *from* can be the client, but every organization it
-will *talk to* needs its server up:
+will *talk to* needs its server up. The ports and profiles are listed in
+`seed/network.json`:
 
 ```bash
 python a2a/serve_org.py seed/orgs/library.json 9001
@@ -136,15 +137,28 @@ python a2a/serve_org.py seed/orgs/food_bank.json 9002
 python a2a/serve_org.py seed/orgs/school.json 9003
 ```
 
+```bash
+python a2a/serve_org.py seed/orgs/health_post.json 9004
+```
+
+```bash
+python a2a/serve_org.py seed/orgs/kitchen.json 9005
+```
+
+```bash
+python a2a/serve_org.py seed/orgs/youth_club.json 9006
+```
+
 Start the web app and open http://127.0.0.1:8080
 
 ```bash
 python web/server.py
 ```
 
-On Windows, `launch.ps1` starts all three processes at once. It runs the two
-neighbor agents on Ollama and the negotiating agent on your chosen provider,
-which keeps a free tier from running out mid-round.
+On Windows, `launch.ps1` starts all seven processes at once, reading the ports
+from `seed/network.json` and waiting until every agent card answers before it
+reports success. It runs the neighbor agents on Ollama and the negotiating agent
+on your chosen provider, which keeps a free tier from running out mid-round.
 
 Press **Run an exchange round** to watch the agents negotiate live, then sign or
 decline when the agent stops and asks. Press **Look for a coalition** to see the
@@ -175,18 +189,26 @@ Add `--auto-approve` to skip the interactive prompts.
 
 ## The demo neighborhood
 
-Three seeded organizations whose resources and needs genuinely complement each
-other, so no exchange is artificial:
+Six seeded organizations at real street addresses in Pilsen, Chicago, whose
+resources and needs genuinely complement each other, so no exchange is
+artificial. The organizations are invented; the streets and the driving routes
+between them are real, taken from OpenStreetMap:
 
 | Organization | Has idle | Needs |
 |---|---|---|
-| Community Library | Van (Tuesdays), community room, digital literacy workshops | Volunteers, refreshments |
-| North Food Bank | Surplus food, refrigerated storage | Transport (Tuesdays), training space |
-| San Martin School | Student volunteers, large classroom | Digital literacy for parents, refreshments |
+| Central Library | Delivery van, community room for 30, digital literacy workshops | Volunteers for the reading workshop, refreshments |
+| North Food Bank | Refreshments and surplus food, spare cold room space | Van transport on Tuesdays, a room to train volunteers |
+| San Martin School | Student volunteers, large classroom for 40 | Digital literacy for parents, refreshments for extended days |
+| Riverside Health Post | Nurse-led health talks, refrigerated store with vaccine cold chain | A van for home visits, a larger room for group sessions |
+| Casa Vecinal Kitchen | Industrial kitchen, volunteer cooks, insulated catering trays | Surplus vegetables and dry goods, cold room space |
+| Eastside Youth Club | Twelve-seat minibus, gym hall with changing rooms | Refreshments for match days, volunteers to tutor members |
 
-Against the seeded funding call, each one alone covers 1, 2 and 3 of the 6
-requirements. No pair qualifies. The three together cover all six and reach
-1,680 people.
+Against the seeded funding call, no organization qualifies alone: the strongest
+covers 3 of the 6 requirements and the weakest covers none. No pair qualifies
+either. Four of the twenty possible trios do, and all six together cover every
+requirement and reach 3,250 people. Those numbers come out of the deterministic
+eligibility scan in `agents/tools/grants.py` and move as the ledger grows, which
+is the product working rather than a fixture.
 
 ## Project layout
 
@@ -227,6 +249,10 @@ python validation/test_guards.py
 python validation/test_isolation.py
 ```
 
+```bash
+python validation/test_pause_bound.py
+```
+
 `test_isolation` proves an agent's tools return only its own organization's data,
 and that two organizations answer the same call differently.
 `test_seed` proves every seeded need has a counterpart in another organization.
@@ -235,11 +261,16 @@ and that two organizations answer the same call differently.
 `test_signature` proves the approval that writes an agreement is the one that
 signs it, and that a later rejection in the same round cannot strand it unsigned.
 `test_guards` proves the checks around `record_agreement` reject a resource the
-organization does not own, a day nobody negotiated, and filler text, while still
-letting a real exchange through.
+organization does not own, a day nobody negotiated, filler text, a display name
+where an organization id belongs, and a trade already live between the same two
+organizations, while still letting a real exchange through.
+`test_pause_bound` proves a director who declines is not asked the same question
+again, and that an agent which keeps calling the same tool is stopped rather than
+allowed to hold the round open.
 
-`test_seed`, `test_ledger`, `test_signature` and `test_guards` are deterministic
-and need no model. `test_approval` drives a live agent.
+`test_seed`, `test_ledger`, `test_signature`, `test_guards` and
+`test_pause_bound` are deterministic and need no model. `test_approval` drives a
+live agent.
 
 ## Notes on running locally
 
