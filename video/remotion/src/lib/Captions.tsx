@@ -77,13 +77,20 @@ const LINES: Line[] = (() => {
 })();
 
 // Burned-in karaoke captions.
-export const Captions: React.FC<{offset?: number}> = ({offset = 0}) => {
+export const Captions: React.FC<{offset?: number; hideFrom?: number}> = ({
+  offset = 0,
+  // The close card sets the film's one sticky line at display size. A
+  // subtitle box repeating the same words in the same seconds makes a reader
+  // stop to work out whether they are two different claims.
+  hideFrom,
+}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   // Captions are timed against the whole film. A scene rendered on its own for
   // review starts at frame 0, so it passes its own start time in and the lines
   // land on the words either way.
   const t = frame / fps + offset;
+  if (hideFrom !== undefined && frame >= hideFrom) return null;
   const line = LINES.find((l) => t >= l.start - 0.12 && t <= l.end + 0.35);
   if (!line) return null;
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Composition, staticFile} from 'remotion';
+import {AbsoluteFill, Audio, Composition, Still, staticFile} from 'remotion';
 import timing from './data/scene_timing.json';
 import {Pause, PAUSE_DUR} from './scenes/Pause';
 import {Neighborhood, NEIGHBORHOOD_DUR} from './scenes/Neighborhood';
@@ -9,6 +9,8 @@ import {Signatures, SIGNATURES_DUR} from './scenes/Signatures';
 import {Refuses, REFUSES_DUR} from './scenes/Refuses';
 import {Coalition, COALITION_DUR} from './scenes/Coalition';
 import {Close, CLOSE_DUR} from './scenes/Close';
+import {Film, FILM_FRAMES} from './Video';
+import {Thumbnail} from './Thumbnail';
 import {Captions} from './lib/Captions';
 import {FPS} from './theme';
 
@@ -34,6 +36,12 @@ const Solo: React.FC<{id: string; children: React.ReactNode}> = ({id, children})
 // costs a four-minute render instead of a forty-minute one.
 export const RemotionRoot: React.FC = () => (
   <>
+    <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} />
+    <Composition
+      id="Barnraise"
+      component={Film}
+      durationInFrames={FILM_FRAMES} fps={FPS} width={1920} height={1080}
+    />
     <Composition
       id="S1-pause"
       component={() => <Solo id="s1"><Pause /></Solo>}
