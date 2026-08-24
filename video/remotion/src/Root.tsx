@@ -12,6 +12,7 @@ import {Close, CLOSE_DUR} from './scenes/Close';
 import {Film, FILM_FRAMES} from './Video';
 import {Thumbnail} from './Thumbnail';
 import {ThumbnailPortrait} from './ThumbnailPortrait';
+import {Architecture} from './Architecture';
 import {Captions} from './lib/Captions';
 import {FPS} from './theme';
 
@@ -41,6 +42,8 @@ export const RemotionRoot: React.FC = () => (
     {/* 3:4, for the Devpost gallery grid. Authored at its own size rather than
         cropped out of the 16:9 one, which would lose either the type or the row. */}
     <Still id="ThumbnailPortrait" component={ThumbnailPortrait} width={1200} height={1600} />
+    {/* Devpost requires the architecture diagram as an uploaded file. */}
+    <Still id="Architecture" component={Architecture} width={2400} height={1420} />
     <Composition
       id="Barnraise"
       component={Film}

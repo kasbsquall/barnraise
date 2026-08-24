@@ -2,6 +2,12 @@
 
 ## The idea in one diagram
 
+![Barnraise architecture](architecture.png)
+
+The same diagram is below as Mermaid, so it stays readable in a diff and cannot
+drift from the prose around it. The PNG above is what gets uploaded where a file
+is required.
+
 Every organization runs its own agent over its own private data. Agents talk to
 each other across organizational boundaries using the A2A protocol. Six
 organizations run as six processes on ports 9001 to 9006; whichever one starts a
