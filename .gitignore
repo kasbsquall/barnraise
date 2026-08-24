@@ -11,6 +11,9 @@ generated/
 # Video working files: raw captures and renders are large and reproducible
 video/capture/raw/
 video/footage/
+video/audio/*.wav
+video/audio/*.mp3
+video/audio/vo/
 video/capture/mp4/
 video/capture/qa/
 video/capture/node_modules/

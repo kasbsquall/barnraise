@@ -127,7 +127,8 @@ agent card so the protocol is visible rather than described.
 **VO.** "Each organization runs its own agent over its own private data. The
 agents reach each other over A2A, the agent-to-agent protocol, across process
 boundaries. The food bank needs a van on Tuesdays. The library has one sitting
-idle. Neither of them knew."
+idle. Neither of them knew. There it is. A vehicle that was going to sit still,
+and the neighbour who needed it that day."
 
 **Claim → proof.** Six terminals on ports 9001 to 9006, an agent card fetched
 live, and the feed showing what each agent actually wrote. This is the technical
@@ -157,7 +158,8 @@ is now in force, and the line between those two organizations on the map thicken
 **VO.** "Nothing executes on one signature. Luis signs from the food bank. Ana
 cannot see his decision from the library, and the server refuses her signature if
 she tries. She signs her own side. Only then does the agreement exist, and the
-line between them gets thicker."
+line between them gets thicker. Four of these rows are seeded history. The other
+three were negotiated in sessions exactly like this one."
 
 **Claim → proof.** The row stays uncream after the first signature, on screen,
 and flips only on the second.

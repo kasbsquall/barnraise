@@ -1,0 +1,66 @@
+[
+ {
+  "id": "s1",
+  "titulo": "THE PAUSE",
+  "slot": 11,
+  "vo": "This agent finished negotiating with another organization's agent. Then it stopped, and waited for a person to sign.",
+  "est": 8.2,
+  "vo_dur": 8.36
+ },
+ {
+  "id": "s2",
+  "titulo": "SIX ORGANIZATIONS, SEVEN HUNDRED METRES APART",
+  "slot": 27,
+  "vo": "Six community organizations, all inside one district. A library with a van that sits idle on Tuesdays. A food bank with cold room space it does not fill. A kitchen with six burners nobody uses before four in the afternoon. They are seven hundred metres apart and none of them knows what the others have.",
+  "est": 25.0,
+  "vo_dur": 22.24
+ },
+ {
+  "id": "s3",
+  "titulo": "WHO THIS IS FOR",
+  "slot": 12,
+  "vo": "It is for them. Six people, six organizations, no IT department, and no appetite for another dashboard to check.",
+  "est": 8.6,
+  "vo_dur": 8.54
+ },
+ {
+  "id": "s4",
+  "titulo": "THE AGENTS TALK",
+  "slot": 34,
+  "vo": "Each organization runs its own agent over its own private data. The agents reach each other over A2A, the agent-to-agent protocol, across process boundaries. The food bank needs a van on Tuesdays. The library has one sitting idle. Neither of them knew. There it is. A vehicle that was going to sit still, and the neighbour who needed it that day.",
+  "est": 27.7,
+  "vo_dur": 27.4
+ },
+ {
+  "id": "s5",
+  "titulo": "TWO SIGNATURES",
+  "slot": 36,
+  "vo": "Nothing executes on one signature. Luis signs from the food bank. Ana cannot see his decision from the library, and the server refuses her signature if she tries. She signs her own side. Only then does the agreement exist, and the line between them gets thicker. Four of these rows are seeded history. The other three were negotiated in sessions exactly like this one.",
+  "est": 29.1,
+  "vo_dur": 28.7
+ },
+ {
+  "id": "s6",
+  "titulo": "WHAT IT REFUSES",
+  "slot": 20,
+  "vo": "An agent has no tool that returns a neighbor's resources. And what reaches the ledger is checked by code rather than trusted to a model: the wrong direction, a day nobody negotiated, an organization that is not a party. A funder is going to read this.",
+  "est": 20.9,
+  "vo_dur": 18.76
+ },
+ {
+  "id": "s7",
+  "titulo": "THE COALITION",
+  "slot": 25,
+  "vo": "Then a funding call appears. Alone, the strongest of them covers three requirements of six, and the kitchen covers none. None of them reaches the thousand people the fund asks for. Together they cover all six and reach three thousand two hundred and fifty. And the requirement nobody can fake is this one: documented prior collaboration. It asks for three agreements. The ledger holds seven.",
+  "est": 29.5,
+  "vo_dur": 29.54
+ },
+ {
+  "id": "s8",
+  "titulo": "CLOSE",
+  "slot": 7,
+  "vo": "Every agent in this sector works inside one organization. Barnraise is the first one that works between them.",
+  "est": 8.2,
+  "vo_dur": 8.13
+ }
+]
