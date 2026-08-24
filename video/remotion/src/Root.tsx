@@ -43,7 +43,7 @@ export const RemotionRoot: React.FC = () => (
         cropped out of the 16:9 one, which would lose either the type or the row. */}
     <Still id="ThumbnailPortrait" component={ThumbnailPortrait} width={1200} height={1600} />
     {/* Devpost requires the architecture diagram as an uploaded file. */}
-    <Still id="Architecture" component={Architecture} width={2400} height={1420} />
+    <Still id="Architecture" component={Architecture} width={2400} height={1560} />
     <Composition
       id="Barnraise"
       component={Film}
