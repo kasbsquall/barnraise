@@ -11,6 +11,7 @@ import {Coalition, COALITION_DUR} from './scenes/Coalition';
 import {Close, CLOSE_DUR} from './scenes/Close';
 import {Film, FILM_FRAMES} from './Video';
 import {Thumbnail} from './Thumbnail';
+import {ThumbnailPortrait} from './ThumbnailPortrait';
 import {Captions} from './lib/Captions';
 import {FPS} from './theme';
 
@@ -37,6 +38,9 @@ const Solo: React.FC<{id: string; children: React.ReactNode}> = ({id, children})
 export const RemotionRoot: React.FC = () => (
   <>
     <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} />
+    {/* 3:4, for the Devpost gallery grid. Authored at its own size rather than
+        cropped out of the 16:9 one, which would lose either the type or the row. */}
+    <Still id="ThumbnailPortrait" component={ThumbnailPortrait} width={1200} height={1600} />
     <Composition
       id="Barnraise"
       component={Film}

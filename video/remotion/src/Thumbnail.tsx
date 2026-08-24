@@ -39,7 +39,7 @@ export const Thumbnail: React.FC = () => (
       }}
     >
       <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-        <span style={{fontFamily: MONO, fontSize: 30, color: C.signedInk, opacity: 0.62}}>#14</span>
+        <span style={{fontFamily: MONO, fontSize: 30, color: C.signedInk, opacity: 0.62}}>#19</span>
         <div style={{display: 'flex'}}>
           <span style={{background: C.lib, color: C.signedInk, fontFamily: MONO,
                         fontWeight: 700, fontSize: 26, padding: '7px 14px'}}>CL</span>
@@ -51,6 +51,8 @@ export const Thumbnail: React.FC = () => (
                    fontSize: 40, lineHeight: 1.16, color: C.signedInk}}>
         Central Library gives<br />a delivery van
       </div>
+      {/* The id and the names are the row the film actually signs on camera, so a
+          judge who pauses S5 and then looks at this sees the same agreement. */}
       <div style={{marginTop: 18, fontFamily: MONO, fontSize: 23,
                    color: C.signedInk, opacity: 0.66}}>
         signed by Ana Torres<br />and Luis Mendoza
