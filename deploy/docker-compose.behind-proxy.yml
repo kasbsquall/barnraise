@@ -1,0 +1,69 @@
+# The demo on a host that already has a web server.
+#
+# The companion file to docker-compose.yml. Use that one on a machine that is
+# yours alone: it brings its own Caddy and takes 80 and 443. Use this one when
+# ports 80 and 443 already belong to something else — a panel, an existing site,
+# anything with paying users behind it. Standing up a second proxy there is how
+# you take someone's production down.
+#
+# The app binds to the loopback only. The host's web server is expected to
+# reverse-proxy a name to it, terminate TLS, and keep its own ACME path off the
+# proxy so certificate renewal does not get answered by this application.
+#
+#   cp deploy/.env.example deploy/.env      and set APP_PORT
+#   docker compose -f deploy/docker-compose.behind-proxy.yml up -d --build
+#   sh deploy/audit.sh deploy/docker-compose.behind-proxy.yml
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    # 127.0.0.1 is the whole point of this file. Without the address, Docker
+    # publishes on every interface and puts the container straight on the
+    # internet, past whatever firewall the host thinks it has.
+    ports:
+      - "127.0.0.1:${APP_PORT:-8320}:8080"
+    environment:
+      BARNRAISE_DEMO: "1"
+      BARNRAISE_DB: /data/barrio.db
+    volumes:
+      - ledger:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    # Deliberately modest. This shares a machine with production, and a demo has
+    # no business competing with it for memory.
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/api/state', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  reset:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      BARNRAISE_DB: /data/barrio.db
+    volumes:
+      - ledger:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    cpus: 0.2
+    command: >
+      sh -c 'python seed/demo_state.py --apply;
+             while sleep ${RESET_SECONDS:-900}; do python seed/demo_state.py --apply; done'
+
+volumes:
+  ledger:
