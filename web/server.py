@@ -308,4 +308,13 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8080, log_level="warning")
+    # Loopback by default, so cloning the repository and running it never puts the
+    # console on the network by accident.
+    #
+    # A container needs the opposite: 127.0.0.1 inside the namespace is not
+    # reachable from the host, so Docker's published port answers nothing while
+    # the container's own healthcheck passes, which reads as a proxy problem and
+    # is not one. The image sets BARNRAISE_HOST=0.0.0.0 and the publish is pinned
+    # to 127.0.0.1 on the host, so the exposure is decided there, once.
+    uvicorn.run(app, host=os.getenv("BARNRAISE_HOST", "127.0.0.1"),
+                port=int(os.getenv("BARNRAISE_PORT", "8080")), log_level="warning")
