@@ -60,7 +60,21 @@ que sirven y su dirección. Ana Torres, Luis Mendoza y Marta Ochoa.
 
 **En pantalla:** la ronda real corriendo. Lo que se escribe en la columna es lo
 que los agentes se dijeron por A2A, y cada mensaje cruza el mapa por la carretera
-que tomaría. Termina en TERMS CLOSED, con los dos agentes cerrando el trato.
+que tomaría.
+
+Sobre "ninguno de los dos lo sabía, ahí está" cae la línea del sistema
+COMPLEMENTARITY FOUND: "van transport on Tuesdays to collect donations from the
+wholesale market can be covered by Central Library". Y sobre la frase final, la
+respuesta de la biblioteca: "the exchange appears to be mutually beneficial...
+you will provide surplus food and refreshments for events, which are currently
+idle resources at our library".
+
+**Cuidado al regrabar esta escena.** Una toma anterior llegaba a la pausa con los
+campos del acuerdo limpios y, en la columna, la biblioteca respondiendo que la
+propuesta "does not align well with our needs at this time", justo debajo de la
+frase que señala el encaje. El validador solo leía los campos del acuerdo. Ahora
+`record_flow.js` lee también lo que se ve en la columna y descarta la toma si el
+último mensaje A2A en pantalla suena a rechazo.
 
 ---
 
@@ -75,7 +89,15 @@ que tomaría. Termina en TERMS CLOSED, con los dos agentes cerrando el trato.
 **En pantalla:** las dos firmas, el panel de decisión desapareciendo de la consola
 de la otra directora, y la fila virando a crema. El crema es el único color
 reservado del film: significa acuerdo firmado por las dos partes y no aparece en
-ningún otro sitio.
+ningún otro sitio. El resumen del libro dice 4 entregados + 4 firmados = 8, que es
+exactamente lo que la voz cuenta.
+
+**La única afirmación del film cuya prueba no está en su fotograma.** "El servidor
+rechaza su firma si lo intenta" es cierta y está en `web/runner.py:80-83`: la ruta
+de interrupción lanza `PermisoDeFirma` y la API devuelve 403 con "This decision
+belongs to north-food-bank. central-library cannot sign it". Pero eso no se ve en
+pantalla durante S5; lo que se ve es la consola de Ana diciendo que no tiene nada
+que hacer mientras Luis revisa. Comprobado en el código, no ilustrado en el plano.
 
 ---
 

@@ -130,6 +130,11 @@ afirmación que sería fácil hacer y que no se sostiene.
   sobre Bedrock.
 - **No decimos que las organizaciones sean reales.** Las calles y las rutas sí;
   las organizaciones no, y el aviso está en pantalla durante todo el film.
+- **Hay una afirmación cuya prueba está en el código y no en su fotograma.** En S5
+  la voz dice que el servidor rechaza la firma de una directora sobre la decisión
+  de otra organización. Es cierto (`web/runner.py:80-83`, 403 con "This decision
+  belongs to..."), pero en pantalla no se ve el intento. Todas las demás cifras y
+  afirmaciones del film están visibles en el plano donde se dicen.
 
 ## Pendiente antes de enviar
 

@@ -16,11 +16,6 @@ FPS = 30
 # take. The stretch between is the agent waiting on neighbors and shows nothing.
 # S5 is one continuous piece: the cream flip cannot survive a join.
 CORTES = {
-    # The round take runs 72s and two thirds of it is the agent waiting on
-    # neighbors with nothing on screen. The first segment is the dense stretch of
-    # messages arriving, the second is the two agents actually striking terms,
-    # and the join skips eleven seconds of a still column. Both sides are the
-    # same panel over the same map, so the cut is concealed rather than felt.
     # The cold open holds on the pause. The first two seconds are the page
     # loading and its entry choreography, which belong to nothing.
     's1': ('s1_raw.webm', [(2.6, 14.0)]),
@@ -35,7 +30,15 @@ CORTES = {
     # each organization covers alone, the whole neighborhood, and held on the
     # collaboration requirement where the last three sentences land.
     's7': ('s7_raw.webm', [(6.0, 38.76)]),
-    's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
+    # Two windows out of a round that ran 117s, most of it the agent waiting on
+    # neighbors with a still column on screen. The first window is the discovery
+    # sweep, which is what "the agents reach each other over A2A" is about, and
+    # it ends on COMPLEMENTARITY FOUND naming the van and the Tuesday out loud,
+    # which is where the narration says the food bank needs one and the library
+    # has one idle. The second is the pair of messages where the two agents
+    # strike terms. Both windows are the same panel over the same map, so the
+    # join is concealed rather than felt.
+    's4': ('s4_raw.webm', [(46.0, 62.0), (78.0, 94.0)]),
     's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }
 

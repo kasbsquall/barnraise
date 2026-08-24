@@ -713,8 +713,16 @@ function renderPending(pending) {
         forMe.length === 1
           ? `Entry #${first.id} is waiting for your signature.`
           : `${forMe.length} agreements are waiting for your signature.`;
-      $("#allclear-detail").textContent =
-        `${dirOf(other)} at ${nameOf(other)} has signed. It becomes active when you do.`;
+      // Whether the other side has signed is a fact in the ledger, so read it.
+      // This line used to assert it outright, and on an agreement nobody had
+      // signed yet it told the director their counterpart was already waiting on
+      // them. A product whose whole claim is that both signatures are real
+      // cannot invent one of them in a banner.
+      const otroFirmo = state.firmas_acuerdo.some(
+        (f) => f.acuerdo_id === first.id && f.org_id === other && f.decision === "aprobado");
+      $("#allclear-detail").textContent = otroFirmo
+        ? `${dirOf(other)} at ${nameOf(other)} has signed. It becomes active when you do.`
+        : `${dirOf(other)} at ${nameOf(other)} has not signed either. It becomes active once you both do.`;
       $("#allclear-go").hidden = false;
       $("#allclear-go").querySelector("span").textContent = `Go to entry #${first.id}`;
       $("#allclear-go").onclick = () => {
@@ -814,7 +822,12 @@ const EVENT_TEXT = {
   ronda_inicio: (e) => [`${e.nombre} opens a round`, "It checks its needs and asks the neighbors.", true],
   match: (e) => ["Complementarity found",
                  `${clean(e.necesidad)} can be covered by ${e.vecino}.`, true],
-  terminos: (e) => ["Terms closed", clean(e.texto), true],
+  // The body here is the negotiating agent's own prose, so the heading cannot
+  // assert an outcome the prose may contradict. A round once printed "Terms
+  // closed" over a paragraph explaining that the counterparty wanted to refine
+  // the exchange. What actually settles the terms is the next event, which is
+  // deterministic: the agent stops and the structured terms go to a human.
+  terminos: (e) => ["What the negotiator reported", clean(e.texto), true],
   aprobacion_requerida: (e) => ["The agent stopped", `${e.titulo}. It is waiting for a signature.`, true],
   aprobacion_resuelta: (e) => ["Decision made",
                                e.decision === "yes" ? "Signed. The agent continues." : "Declined. Nothing was written.", true],

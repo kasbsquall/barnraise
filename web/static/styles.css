@@ -378,6 +378,13 @@ body { overflow: hidden; }
   font-size: var(--t-micro); text-transform: uppercase; letter-spacing: 0.12em;
   color: var(--ink-faint); white-space: nowrap;
 }
+/* The ledger's headline is the only label whose length is data: it grows a part
+   for every state present, and at three parts the nowrap inherited from .label
+   ran it past the panel and clipped the last count. A summary that says "8
+   agreements" and then shows a breakdown adding up to seven is worse than no
+   breakdown, so this one wraps. */
+#ledger-legend { white-space: normal; line-height: 1.7; }
+
 .hint { font-size: var(--t-small); color: var(--ink-soft); }
 
 .section-head {
@@ -806,7 +813,4 @@ body { overflow: hidden; }
   .btn--small { min-height: 44px; padding: 0.625rem 0.875rem; }
   .identity { min-height: 44px; }
 
-  /* The ledger legend is one nowrap line of counts; on a phone it was the single
-     element pushing the document 6px past the viewport. */
-  #ledger-legend { white-space: normal; }
 }

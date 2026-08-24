@@ -141,6 +141,51 @@ async function revisar(page, t, orgId) {
   return fallos;
 }
 
+/** What the camera can actually read in the activity column.
+ *
+ *  The check above reads the agreement's own fields, and they were clean on a
+ *  take whose visible conversation ended with the neighbour answering "the
+ *  current proposal does not align well with our needs at this time", directly
+ *  under a narration line pointing at the match. The terms object is not what a
+ *  viewer reads. This is.
+ *
+ *  Haggling mid-conversation is honest and stays: agents counter-offer, and a
+ *  round where nobody ever pushes back would be the suspicious one. What cannot
+ *  stand is the LAST thing on screen reading as a refusal while the picture is
+ *  supposed to show a settlement.
+ */
+async function revisarFeed(page) {
+  // The rows type themselves in, so a read taken too early sees half a sentence.
+  let previo = '';
+  for (let i = 0; i < 12; i++) {
+    const ahora = await page.evaluate(() =>
+      [...document.querySelectorAll('#feed li.event')].map((li) =>
+        (li.querySelector('.event__text')?.textContent || '')).join('|'));
+    if (ahora === previo && ahora) break;
+    previo = ahora;
+    await sleep(900);
+  }
+
+  const filas = await page.evaluate(() =>
+    [...document.querySelectorAll('#feed li.event')].map((li) => ({
+      etiqueta: (li.querySelector('.event__route')?.textContent || '').trim(),
+      texto: (li.querySelector('.event__text')?.textContent || '').trim(),
+    })));
+
+  const fallos = [];
+  const a2a = filas.filter((f) => /A2A$/.test(f.etiqueta));
+  const ultimo = a2a[a2a.length - 1];
+  if (ultimo && NEGATIVO.test(ultimo.texto))
+    fallos.push(`the last A2A message on screen reads as a refusal: "${ultimo.texto.slice(0, 160)}"`);
+
+  const informe = filas.filter((f) => /negotiator reported/i.test(f.etiqueta)).pop();
+  if (informe && NEGATIVO.test(informe.texto))
+    fallos.push(`the negotiator's report on screen contradicts the agreement: "${informe.texto.slice(0, 160)}"`);
+
+  if (!a2a.length) fallos.push('no A2A message is visible in the column at all');
+  return fallos;
+}
+
 (async () => {
   const dir = path.dirname(path.resolve(out));
   fs.mkdirSync(dir, { recursive: true });
@@ -262,6 +307,7 @@ async function revisar(page, t, orgId) {
   if (mode === 'round') {
     // A round left paused by a previous attempt blocks this one with a 409, and
     // a declined round takes a moment to unwind. Clear it rather than failing.
+    let recargar = false;
     for (let i = 0; i < 40; i++) {
       const s = await state(page);
       if (!s.pendiente && s.fase === 'inactiva') break;
@@ -275,6 +321,17 @@ async function revisar(page, t, orgId) {
       }
       if (i === 0) console.log('waiting for the previous round to unwind');
       await sleep(3000);
+      // The unwind clears the server, not the page. A take shot straight after a
+      // discarded one opened on the discarded round's decision panel, terms and
+      // all, including the line "No agreement reached" that got it discarded in
+      // the first place, and the new round's messages arrived underneath it.
+      // Reload so the take starts on a page that knows nothing about it.
+      recargar = true;
+    }
+    if (recargar) {
+      await page.reload({ waitUntil: 'networkidle' });
+      await mapReady(page);
+      console.log('page reloaded, the previous round is off the screen');
     }
 
     await clic(page, '#btn-round');
@@ -293,7 +350,8 @@ async function revisar(page, t, orgId) {
     if (!end.pendiente) throw new Error('the round never reached the pause');
     const t = end.pendiente.argumentos;
     console.log('TERMS:', JSON.stringify(t, null, 2));
-    const fallos = await revisar(page, t, end.pendiente.org_id);
+    const fallos = [...await revisar(page, t, end.pendiente.org_id),
+                    ...await revisarFeed(page)];
     if (fallos.length) {
       console.log('\nDISCARD THIS TAKE:');
       fallos.forEach((f) => console.log('  -', f));

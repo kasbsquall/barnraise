@@ -45,10 +45,10 @@
   },
   {
    "titulo": "an organization that is not a party",
-   "peticion": "POST /api/agreements/16/decide",
+   "peticion": "POST /api/agreements/19/decide",
    "cuerpo_enviado": "{\"org_id\": \"riverside-health-post\", \"decision\": \"aprobado\"}",
    "codigo": 403,
-   "respuesta": "riverside-health-post is not a party to agreement #16 and cannot sign it."
+   "respuesta": "riverside-health-post is not a party to agreement #19 and cannot sign it."
   }
  ]
 }
