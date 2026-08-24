@@ -21,8 +21,11 @@ CORTES = {
     # messages arriving, the second is the two agents actually striking terms,
     # and the join skips eleven seconds of a still column. Both sides are the
     # same panel over the same map, so the cut is concealed rather than felt.
-    's4': ('s4_raw.webm', [(19.5, 44.0), (58.0, 65.5)]),
-    's5': ('s5_raw.webm', [(11.6, 43.8)]),
+    # The cold open holds on the pause. The first two seconds are the page
+    # loading and its entry choreography, which belong to nothing.
+    's1': ('s1_raw.webm', [(2.6, 14.0)]),
+    's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
+    's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }
 
 # The clip must outlast its slot. Remotion keeps a scene rendering through its

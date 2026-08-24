@@ -1,12 +1,17 @@
 // Records the Barnraise flow for scenes S4 and S5 of the pitch film.
 //
 //   node record_flow.js round <out.webm>   S4: a round running on the map
-//   node record_flow.js sign  <out.webm>   S5: the pause and both signatures
+//   node record_flow.js pause <out.webm>   S1: the panel waiting for a person
+//   node record_flow.js sign  <out.webm>   S5: both signatures
 //
-// Both takes come from ONE server-side round, which is the point: the terms Luis
-// reads at the pause are the terms the agents negotiated in take A. The round
-// survives between takes because it is blocked on a server-side event, not on
-// anything in the page.
+// All three takes come from ONE server-side round, and that is the point: the
+// terms on screen in S1 are the terms the agents negotiated in S4 and the terms
+// S5 signs. Shot from separate rounds, the three scenes would put different
+// numbers and different resources in front of a viewer who is being asked to
+// believe they are watching one thing happen. The round survives between takes
+// because it is blocked on a server-side event, not on anything in the page.
+//
+// Run them in order: round, pause, sign.
 //
 // Rewritten for the map. The previous version scrolled a long page to bring the
 // neighborhood into frame and clicked a button inside a section that no longer
@@ -33,8 +38,8 @@ const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
 
 const mode = process.argv[2];
 const out = process.argv[3];
-if (!['round', 'sign'].includes(mode) || !out) {
-  console.error('usage: node record_flow.js <round|sign> <out.webm>');
+if (!['round', 'pause', 'sign'].includes(mode) || !out) {
+  console.error('usage: node record_flow.js <round|pause|sign> <out.webm>');
   process.exit(1);
 }
 
@@ -189,6 +194,19 @@ async function revisar(page, t, orgId) {
       fallos.forEach((f) => console.log('  -', f));
       process.exitCode = 2;
     }
+  }
+
+  if (mode === 'pause') {
+    // The cold open. Nothing is driven: the panel holds the terms the agents
+    // just settled on, and whatever the product does on its own is the motion.
+    // Filming it as its own take rather than borrowing the head of the signing
+    // take, which only holds still for five seconds before the first click.
+    const s = await state(page);
+    if (!s.pendiente) throw new Error('nothing is pending; run the round take first');
+    console.log('holding on the pause:', s.pendiente.titulo);
+    await sleep(15000);
+    const fin = await state(page);
+    if (!fin.pendiente) throw new Error('the decision was resolved mid-take');
   }
 
   if (mode === 'sign') {

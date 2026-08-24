@@ -24,8 +24,8 @@ const DUR = 942;                         // 31.40s at 30fps, from the measured n
 
 // Measured on the encoded cut by watching the feed column's own brightness step
 // when the milestone row paints, not estimated off the source timeline.
-const JOIN = 735;       // 24.5s · the concealed cut into the terms being struck
-const MATCH = 843;      // 28.1s · TERMS CLOSED lands, and the scene hands off
+const JOIN = 600;       // 20.0s · the concealed cut into the terms being struck
+const MATCH = 783;      // 26.1s · TERMS CLOSED lands, and the scene hands off
 
 // Exactly FIT, and nothing moves.
 //

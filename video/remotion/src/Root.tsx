@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, Audio, Composition, staticFile} from 'remotion';
 import timing from './data/scene_timing.json';
+import {Pause, PAUSE_DUR} from './scenes/Pause';
 import {Agents, AGENTS_DUR} from './scenes/Agents';
 import {Signatures, SIGNATURES_DUR} from './scenes/Signatures';
 import {Captions} from './lib/Captions';
@@ -28,6 +29,11 @@ const Solo: React.FC<{id: string; children: React.ReactNode}> = ({id, children})
 // costs a four-minute render instead of a forty-minute one.
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition
+      id="S1-pause"
+      component={() => <Solo id="s1"><Pause /></Solo>}
+      durationInFrames={PAUSE_DUR} fps={FPS} width={1920} height={1080}
+    />
     <Composition
       id="S4-agents"
       component={() => <Solo id="s4"><Agents /></Solo>}
