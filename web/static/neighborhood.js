@@ -93,8 +93,7 @@ function buildMap(organizaciones, onSelect) {
       layout: {"line-cap": "round", "line-join": "round"},
       paint: {
         "line-color": "#04080e",
-        "line-width": ["+", ["get", "width"], 8],
-        "line-offset": ["get", "offset"],
+        "line-width": ["+", ["get", "width"], 5],
         "line-opacity": 0.92,
         "line-blur": 0.5,
       },
@@ -107,25 +106,9 @@ function buildMap(organizaciones, onSelect) {
       paint: {
         "line-color": ["get", "color"],
         "line-width": ["get", "width"],
-        "line-offset": ["get", "offset"],
         "line-opacity": 1,
       },
     });
-    // The junction where two organizations' routes meet. It was ambiguous which
-    // line owned which leg where they overlapped, so the meeting point is drawn.
-    map.addLayer({
-      id: "links-joint",
-      type: "circle",
-      source: "links",
-      filter: ["==", "$type", "Point"],
-      paint: {
-        "circle-radius": 5,
-        "circle-color": "#04080e",
-        "circle-stroke-width": 2.5,
-        "circle-stroke-color": ["get", "color"],
-      },
-    });
-
     map.addSource("live", {type: "geojson", data: {type: "FeatureCollection", features: []}});
     map.addLayer({
       id: "live-casing",
@@ -181,6 +164,49 @@ function buildMap(organizaciones, onSelect) {
  * nothing about when it arrived, and the first thing a viewer asks of this map
  * is which of these connections is new.
  */
+/**
+ * Shifts a line sideways, tapering the shift to nothing at both ends.
+ *
+ * MapLibre's own line-offset moves the whole line by a constant, which is fine
+ * for one route and wrong for six: where several converge on one pin each
+ * arrives at a different point and they open into a fan, and at a sharp corner
+ * the constant offset overshoots into a wedge. Transit maps solve it the same
+ * way this does, by moving the geometry and closing the gap at the terminals, so
+ * parallel routes run side by side down a shared street and meet at the door.
+ *
+ * The shift is in metres, so it scales with the map rather than staying a fixed
+ * number of screen pixels. That is the behaviour you want: zoom in and parallel
+ * routes separate the way parallel streets do.
+ */
+function desplazar(linea, metros) {
+  if (!metros || linea.length < 2) return linea;
+  const RAD = Math.PI / 180;
+  const mLat = 110540;
+  const salida = [];
+  for (let i = 0; i < linea.length; i++) {
+    const p = linea[i];
+    const mLon = 111320 * Math.cos(p[1] * RAD);
+    // Average the normals of the segments meeting at this vertex, so a corner
+    // moves along its bisector instead of breaking into two offset lines.
+    let nx = 0, ny = 0;
+    const seg = (a, b) => {
+      const dx = (b[0] - a[0]) * mLon, dy = (b[1] - a[1]) * mLat;
+      const l = Math.hypot(dx, dy) || 1;
+      nx += -dy / l; ny += dx / l;
+    };
+    if (i > 0) seg(linea[i - 1], p);
+    if (i < linea.length - 1) seg(p, linea[i + 1]);
+    const l = Math.hypot(nx, ny) || 1;
+    nx /= l; ny /= l;
+    // Taper: no shift at the terminals, full shift through the middle fifth.
+    const t = i / (linea.length - 1);
+    const rampa = Math.min(1, Math.min(t, 1 - t) / 0.18);
+    const k = metros * rampa;
+    salida.push([p[0] + (nx * k) / mLon, p[1] + (ny * k) / mLat]);
+  }
+  return salida;
+}
+
 let drawnKeys = new Set();
 
 function drawLinks(vinculos) {
@@ -190,27 +216,65 @@ function drawLinks(vinculos) {
   if (!src) return;
 
   const usable = vinculos.map((v) => ({v, r: routeBetween(v.a, v.b)})).filter((x) => x.r);
+
+  /**
+   * The route with its last stretch to the door added at both ends.
+   *
+   * OSRM snaps to the nearest drivable road, so a cached route starts and ends
+   * up to 44 metres from the organization it belongs to. On the map that reads
+   * as a line stopping in the middle of a street and going nowhere, which is the
+   * one thing that never happens on a route people recognise. The cached
+   * geometry stays exactly what OSRM returned; the connector is drawn, not
+   * stored. The order follows the route's own endpoints, not the link's, because
+   * routeBetween looks the pair up under a canonical key and may hand back the
+   * reverse.
+   */
+  const puerta = (id) => {
+    const m = markers.get(id);
+    if (!m) return null;
+    const {lng, lat} = m.getLngLat();
+    return [lng, lat];
+  };
+  const cerca = (p, q) => {
+    const dx = (p[0] - q[0]) * Math.cos((p[1] * Math.PI) / 180);
+    return Math.hypot(dx, p[1] - q[1]);
+  };
+  const trazo = (r) => {
+    const ini = puerta(r.a), fin = puerta(r.b);
+    const l = r.linea;
+    // Cut the route at whichever of its first and last few points sits closest
+    // to the organization before joining it to the door. Simply appending the
+    // door to the raw geometry made a spur wherever the road carried on past the
+    // building: the line reached the end of the street, turned round and came
+    // back, and with the parallel offset applied that doubling-back rendered as
+    // a wedge pointing out of the pin.
+    let desde = 0, hasta = l.length - 1;
+    if (ini) for (let i = 1; i < Math.min(8, l.length); i++)
+      if (cerca(l[i], ini) < cerca(l[desde], ini)) desde = i;
+    if (fin) for (let i = l.length - 2; i >= Math.max(0, l.length - 8); i--)
+      if (cerca(l[i], fin) < cerca(l[hasta], fin)) hasta = i;
+    if (hasta <= desde) { desde = 0; hasta = l.length - 1; }
+    return [...(ini ? [ini] : []), ...l.slice(desde, hasta + 1), ...(fin ? [fin] : [])];
+  };
   const isNew = usable.some(({v}) => !drawnKeys.has(routeKey(v.a, v.b)));
   const build = (fraction) => {
     const features = [];
     usable.forEach(({v, r}) => {
       const key = routeKey(v.a, v.b);
       const already = drawnKeys.has(key);
-      const upto = already ? r.linea.length : Math.max(2, Math.round(fraction * r.linea.length));
-      const width = 5 + (v.acuerdos / max) * 6;
+      const width = 4 + (v.acuerdos / max) * 5;
+      // Spread the routes off the centre line so a shared street shows two
+      // parallel relationships instead of one muddled trace. The lane is stable
+      // per link, not per render, and about 9 m apart, which is roughly one lane
+      // of a Pilsen street at the zoom the neighborhood sits at.
+      const carril = (usable.findIndex((u) => routeKey(u.v.a, u.v.b) === key)
+                      - (usable.length - 1) / 2) * 9;
+      const linea = desplazar(trazo(r), carril);
+      const upto = already ? linea.length : Math.max(2, Math.round(fraction * linea.length));
       const props = {color: routeHex(v.a), width,
-                     // Spread the routes off the centre line so a shared street
-                     // shows two parallel relationships instead of one muddled
-                     // trace. Offsets are stable per link, not per render.
-                     offset: (usable.findIndex((u) => routeKey(u.v.a, u.v.b) === key)
-                              - (usable.length - 1) / 2) * (width + 3),
                      a: v.a, b: v.b, acuerdos: v.acuerdos};
       features.push({type: "Feature", properties: props,
-                     geometry: {type: "LineString", coordinates: r.linea.slice(0, upto)}});
-      if (already || fraction >= 1) {
-        features.push({type: "Feature", properties: props,
-                       geometry: {type: "Point", coordinates: r.linea[r.linea.length - 1]}});
-      }
+                     geometry: {type: "LineString", coordinates: linea.slice(0, upto)}});
     });
     return {type: "FeatureCollection", features};
   };

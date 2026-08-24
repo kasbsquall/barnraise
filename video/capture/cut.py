@@ -21,11 +21,8 @@ CORTES = {
     # messages arriving, the second is the two agents actually striking terms,
     # and the join skips eleven seconds of a still column. Both sides are the
     # same panel over the same map, so the cut is concealed rather than felt.
-    's4': ('s4_raw.webm', [(24.0, 50.0), (62.0, 68.0)]),
-    # One continuous piece: the cream flip cannot survive a join. Positioned so
-    # the flip lands about two thirds in and the map ending is inside the scene,
-    # because the narration says the line between them gets thicker.
-    's5': ('s5_raw.webm', [(12.1, 44.3)]),
+    's4': ('s4_raw.webm', [(19.5, 44.0), (58.0, 65.5)]),
+    's5': ('s5_raw.webm', [(11.6, 43.8)]),
 }
 
 # The clip must outlast its slot. Remotion keeps a scene rendering through its

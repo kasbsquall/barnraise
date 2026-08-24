@@ -25,9 +25,9 @@ const DUR = 946;                         // 31.54s at 30fps
 // Measured on the encoded cut. The flip was pinned by sampling the panel for the
 // reserved colour every tenth of a second: 36.9% of the panel is cream at 21.0s
 // and 63.5% at 21.1s, so 633 is the frame the second signature lands.
-const LEDGER = 552;     // 18.4s · the Agreements view opens on rows already signed
-const CREAM = 633;      // 21.1s · the row both directors signed flips
-const MAP = 852;        // 28.4s · back to the map, the line between them thicker
+const LEDGER = 558;     // 18.6s · the Agreements view opens on rows already signed
+const CREAM = 639;      // 21.3s · the row both directors signed flips
+const MAP = 864;        // 28.8s · back to the map, the line between them thicker
 
 // Exactly FIT, and nothing moves: see the note in Agents.tsx. An overscan here
 // cropped the wordmark and the phase indicator off their own edges.

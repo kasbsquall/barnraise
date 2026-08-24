@@ -24,8 +24,8 @@ const DUR = 942;                         // 31.40s at 30fps, from the measured n
 
 // Measured on the encoded cut by watching the feed column's own brightness step
 // when the milestone row paints, not estimated off the source timeline.
-const JOIN = 780;       // 26.0s · the concealed cut into the terms being struck
-const MATCH = 912;      // 30.4s · TERMS CLOSED lands, and the scene hands off
+const JOIN = 735;       // 24.5s · the concealed cut into the terms being struck
+const MATCH = 843;      // 28.1s · TERMS CLOSED lands, and the scene hands off
 
 // Exactly FIT, and nothing moves.
 //
@@ -107,7 +107,7 @@ export const Agents: React.FC = () => {
           accent on the match. The accent is louder than the punctuation around
           it: the arrival is the event, the sweep only says the shot changed. */}
       <Sfx src="whoosh.mp3" at={1} vol={0.2} />
-      {[30, 200, 410, 570, 710, 880].map((f) => (
+      {[60, 180, 320, 460, 600, 700].map((f) => (
         <Sfx key={f} src="pop.mp3" at={f} vol={0.085} />
       ))}
       <Sfx src="click.mp3" at={JOIN} vol={0.07} />

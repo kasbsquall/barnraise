@@ -22,17 +22,23 @@
   --rule-soft:    rgba(217, 227, 246, 0.07);
   --edge-top:     rgba(255, 255, 255, 0.06);
 
-  /* routes: one per organization, isoluminant so no org outranks another */
-  /* One colour per organization, used for that organization and nothing else.
-     Six now, not three, chosen to stay distinguishable at pin size on the dark
-     ground and to sit in a similar lightness band so no organization reads as
-     more important than another. */
-  --route-food:   #ffb599;
-  --route-lib:    #75d4ea;
-  --route-school: #e3c05f;
-  --route-health: #8ed6a9;
-  --route-kitchen:#d79ad6;
-  --route-youth:  #9fb0f5;
+  /* One organization, one colour, used for that organization and nothing else:
+     map route, ledger capsule, feed dot, requirement matrix.
+
+     These were isoluminant on purpose, so that no organization would read as
+     more important than another. That was the wrong call and it made the set
+     unusable: L* 71 to 80 is a spread of nine points out of a hundred, which in
+     greyscale is one colour, and a glance at a 10px dot could not tell six
+     things apart. The eye separates by lightness before it separates by hue.
+     They now climb a ladder, 54 61 68 74 80 87, keeping their hues, and the
+     closest pair went from a CIE distance of 27 to 36. Every one clears 4.5:1
+     against the field. */
+  --route-food:   #f18a63;
+  --route-lib:    #06d9fa;
+  --route-school: #fdd669;
+  --route-health: #6cc892;
+  --route-kitchen:#c677c7;
+  --route-youth:  #5f7ed1;
 
   /* states */
   --signed:       #f0e7d6;   /* cream. Only a fully signed agreement. */
@@ -689,7 +695,14 @@ body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .event__text.is-typing::after { display: none; }
 }
-.dot { width: 9px; height: 9px; flex: none; }
+.dot { width: 9px; height: 9px; flex: none; border-radius: 2px; }
+/* The name in the organization's own colour, matching its route on the map. */
+.label--food   { color: var(--route-food); }
+.label--lib    { color: var(--route-lib); }
+.label--school { color: var(--route-school); }
+.label--health { color: var(--route-health); }
+.label--kitchen{ color: var(--route-kitchen); }
+.label--youth  { color: var(--route-youth); }
 .dot--food { background: var(--route-food); }
 .dot--lib { background: var(--route-lib); }
 .dot--school { background: var(--route-school); }

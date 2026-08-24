@@ -37,12 +37,12 @@ export const C = {
   ruleSoft: 'rgba(217, 227, 246, 0.07)',
 
   // one route colour per organization, used nowhere else
-  food: '#ffb599',
-  lib: '#75d4ea',
-  school: '#e3c05f',
-  health: '#8ed6a9',
-  kitchen: '#d79ad6',
-  youth: '#9fb0f5',
+  food: '#f18a63',
+  lib: '#06d9fa',
+  school: '#fdd669',
+  health: '#6cc892',
+  kitchen: '#c677c7',
+  youth: '#5f7ed1',
 
   // cream means an agreement both organizations signed, and appears nowhere else
   signed: '#f0e7d6',

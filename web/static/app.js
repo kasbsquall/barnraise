@@ -22,8 +22,8 @@ const routeOf = (orgId) => ROUTE[orgId] || "lib";
 // read a CSS custom property, so the map needs the literal. Kept beside ROUTE so
 // a colour change touches one place.
 const ROUTE_HEX = {
-  food: "#ffb599", lib: "#75d4ea", school: "#e3c05f",
-  health: "#8ed6a9", kitchen: "#d79ad6", youth: "#9fb0f5",
+  food: "#f18a63", lib: "#06d9fa", school: "#fdd669",
+  health: "#6cc892", kitchen: "#c677c7", youth: "#5f7ed1",
 };
 const routeHex = (orgId) => ROUTE_HEX[routeOf(orgId)];
 
@@ -196,7 +196,8 @@ function render() {
   }
 }
 
-let centrado = null;   // the identity the map was last moved for
+let centrado = null;      // the identity the map was last moved for
+let centrarTimer = null;  // pending move, cancelled if the switcher keeps cycling
 
 function renderIdentity() {
   $("#identity-name").textContent = `${dirOf(me)} · ${nameOf(me)}`;
@@ -213,9 +214,20 @@ function renderIdentity() {
   // was yanking the map mid-round, and on first paint it overrode the framing
   // that puts all six organizations on screen with a jump to whichever one you
   // happen to be.
+  // Wait for the identity to settle before moving the map.
+  //
+  // The switcher is a cycle button, so reaching one organization can pass
+  // through three others, and centring on each of them in turn slid the map left
+  // and right in a burst that reads as the interface being unable to decide
+  // where to look. Only the organization you land on is worth a move.
   if (centrado !== me) {
-    if (centrado !== null) window.NB?.centreOn(me, state?.organizaciones || []);
-    centrado = me;
+    clearTimeout(centrarTimer);
+    const destino = me;
+    centrarTimer = setTimeout(() => {
+      if (destino !== me) return;
+      if (centrado !== null) window.NB?.centreOn(destino, state?.organizaciones || []);
+      centrado = destino;
+    }, centrado === null ? 0 : 650);
   }
   renderYouAre();
 }
@@ -846,10 +858,14 @@ function addEvent(ev, live = false) {
     const from = state?.organizaciones.find((o) => o.nombre === ev.de);
     const to = state?.organizaciones.find((o) => o.nombre === ev.a);
     route.innerHTML =
+      // The organization's name carries its own colour, which is the same colour
+      // its route is drawn in on the map beside this column. A 9px dot next to a
+      // name asks the reader to decode a swatch; a coloured name IS the key.
       `<span class="dot dot--${from ? routeOf(from.org_id) : "lib"}"></span>` +
-      `<span class="label">${esc(ev.de)}</span>${icon("arrow")}` +
+      `<span class="label label--${from ? routeOf(from.org_id) : "lib"}">${esc(ev.de)}</span>${icon("arrow")}` +
       `<span class="dot dot--${to ? routeOf(to.org_id) : "lib"}"></span>` +
-      `<span class="label">${esc(ev.a)}</span><span class="label">A2A</span>`;
+      `<span class="label label--${to ? routeOf(to.org_id) : "lib"}">${esc(ev.a)}</span>` +
+      `<span class="label">A2A</span>`;
     if (ev.texto.length > 260) text.classList.add("event__text--clamp");
     typed = clean(ev.texto);
     if (live && from && to) pulseRoute(from.org_id, to.org_id);
