@@ -148,6 +148,34 @@ def build_ledger_tools(
                 "record_agreement again."
             )
 
+        # A ledger that accepts the same trade over and over is not evidence of
+        # collaboration, it is evidence of an agent looping. Six copies of one
+        # van-for-food exchange reached the book this way, and a funder reading
+        # that sees a neighborhood doing one thing repeatedly rather than six
+        # organizations finding each other. A trade that is already live between
+        # these two is not a new agreement; delivering it and recording the next
+        # one is.
+        pedido = _sustantivo(recurso_recibido)
+        if pedido:
+            conn = book.connect()
+            try:
+                vivos = [
+                    f for f in book.historial(conn, org_id)
+                    if f["estado"] != "cumplido"
+                    and contraparte_org_id in (f["org_solicitante"], f["org_proveedora"])
+                ]
+            finally:
+                conn.close()
+            for f in vivos:
+                ya = _sustantivo(f["recurso_entregado"] or "")
+                if ya and len(pedido & ya) >= max(2, min(len(pedido), len(ya)) // 2):
+                    return (
+                        f"Nothing was filed. Agreement #{f['id']} with {contraparte_org_id} "
+                        f"already covers '{f['recurso_entregado']}' and has not been "
+                        "delivered yet. Negotiate something they have not already "
+                        "committed, or leave it."
+                    )
+
         conn = book.connect()
         try:
             acuerdo_id = book.registrar_propuesta(

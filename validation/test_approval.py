@@ -52,9 +52,23 @@ if pendientes != 0:
     sys.exit(1)
 
 print("\n=== 2. El director aprueba y el agente reanuda ===")
-result = agent([{
-    "interruptResponse": {"interruptId": result.interrupts[0].id, "response": "yes"}
-}])
+# Answering one pause is not enough. A model that is approved sometimes calls the
+# tool again with the arguments slightly reworded, which raises a second pause;
+# this test used to answer once, see nothing in the ledger and report a failure
+# that read as if the guards had refused the write. The production loop in
+# web/runner.py answers up to MAX_PAUSAS times, so this mirrors it.
+from web.runner import MAX_PAUSAS  # noqa: E402
+
+pausas = 0
+while getattr(result, "stop_reason", None) == "interrupt" and pausas < MAX_PAUSAS:
+    pausas += 1
+    print(f"  aprobando pausa {pausas}")
+    result = agent([{
+        "interruptResponse": {"interruptId": result.interrupts[0].id, "response": "yes"}
+    }])
+if getattr(result, "stop_reason", None) == "interrupt":
+    print(f"FALLO: el agente siguio pidiendo aprobacion tras {MAX_PAUSAS} pausas")
+    sys.exit(1)
 print(result)
 
 conn = book.connect()

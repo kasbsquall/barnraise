@@ -13,6 +13,7 @@ negotiated by the agents over A2A.
     python seed/weave.py riverside-health-post casa-vecinal-kitchen
 """
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -23,6 +24,23 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 API = "http://127.0.0.1:8080"
+# Stems that mean the exchange did not happen. A round once reached the pause
+# with conditions reading "exchange declined by Central Library" on an agreement
+# it was filing for signature, and every other check passed, because none of
+# them reads the terms for a sentence contradicting the agreement existing.
+NEGATIVO = ("declin", "reject", "refus", "unable", "withdraw", "cancel",
+            "failed", "failure", "unavailab", "no agreement")
+
+
+def contradice(valor: str) -> str:
+    """The word in this text that says the exchange fell through, if any."""
+    bajo = str(valor).lower()
+    if "no agreement" in bajo:
+        return "no agreement"
+    for w in re.findall("[a-z]+", bajo):
+        if w.startswith(NEGATIVO):
+            return w
+    return ""
 CALENDARIO = {
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
     "morning", "mornings", "afternoon", "afternoons", "day", "days", "week",
@@ -80,6 +98,12 @@ def revisar(t: dict, mis_recursos: list[str]) -> list[str]:
     recibo = palabras(t.get("recurso_recibido", ""))
     if quiero and not (quiero & recibo):
         fallos.append(f'"{t.get("recurso_recibido")}" does not cover the need')
+
+    # An agreement whose own terms say the exchange was declined contradicts the
+    # row it is about to become. Every other check passed on one of those.
+    for campo, valor in t.items():
+        if isinstance(valor, str) and contradice(valor):
+            fallos.append(f'{campo} says the exchange did not happen: "{valor}"')
     return fallos
 
 

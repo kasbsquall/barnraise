@@ -1,14 +1,16 @@
 // Records the Barnraise flow for scenes S4 and S5 of the pitch film.
 //
+//   node record_flow.js round <out.webm>   S4: a round running on the map
+//   node record_flow.js sign  <out.webm>   S5: the pause and both signatures
+//
 // Both takes come from ONE server-side round, which is the point: the terms Luis
-// reads at the pause are the terms the agents negotiated in take A, so the two
-// scenes corroborate each other instead of being two unrelated captures.
+// reads at the pause are the terms the agents negotiated in take A. The round
+// survives between takes because it is blocked on a server-side event, not on
+// anything in the page.
 //
-//   node record_flow.js round  <out.webm>   S4: discovery and negotiation, live
-//   node record_flow.js sign   <out.webm>   S5: the pause, both signatures
-//
-// The round survives between takes because it is blocked on a server-side event,
-// not on anything in the page.
+// Rewritten for the map. The previous version scrolled a long page to bring the
+// neighborhood into frame and clicked a button inside a section that no longer
+// exists; the page does not scroll any more and the map holds the viewport.
 
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -16,22 +18,18 @@ const path = require('path');
 
 const APP = process.env.BARNRAISE_URL || 'http://127.0.0.1:8080';
 
-// The layout stays at 1920x1080 CSS pixels, so the product is framed exactly as a
-// viewer sees it. What changes is the DENSITY: at deviceScaleFactor 2 the same
-// layout is rasterised into 3840x2160 real pixels.
+// The layout stays at 1920x1080 CSS pixels so the product is framed exactly as a
+// viewer sees it. What changes is density: the viewport is opened at the full
+// pixel size and the document is zoomed, which is the only combination that
+// works. deviceScaleFactor is NOT the lever: setting it to 2 and asking for a
+// larger video put the page in the corner of an empty grey canvas, because
+// Playwright records the viewport and the rest of the canvas is padding.
 //
-// This is what fixes the film looking soft. A camera pushing 3x into a 1920-wide
-// plate is stretching 640 source pixels across the frame, and no amount of care
-// in the render recovers detail that was never captured. At 2x density the same
-// push reads 1280 source pixels into a 1920 frame, which is a downscale.
-//
-// deviceScaleFactor is NOT the lever. Setting it to 2 and asking for a 3840x2160
-// video put the page in the top-left quarter of a grey 4K canvas: Playwright
-// records the viewport, and the extra canvas is just empty. The viewport is
-// opened at the full pixel size instead, and the document is zoomed so the app
-// still lays itself out at 1920 CSS pixels.
+// 1.3333 gives 2560x1440. A camera pushing into this reads real captured detail
+// rather than magnifying a 1920 plate, and it is half the file size of 4K for a
+// film delivered at 1080.
 const W = 1920, H = 1080;
-const SCALE = Number(process.env.CAPTURE_SCALE || 2);
+const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
 
 const mode = process.argv[2];
 const out = process.argv[3];
@@ -44,21 +42,89 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function state(page) {
   return page.evaluate(async () => {
-    const r = await fetch('/api/state');
-    const d = await r.json();
-    return { fase: d.ronda?.fase, pendiente: d.ronda?.pendiente || null, acuerdos: d.acuerdos?.length || 0 };
+    const d = await (await fetch('/api/state')).json();
+    return {
+      fase: d.ronda?.fase,
+      pendiente: d.ronda?.pendiente || null,
+      acuerdos: d.acuerdos?.length || 0,
+      mensajes: (d.actividad || []).filter((e) => e.tipo === 'mensaje').length,
+    };
   });
 }
 
-/** Who the console is viewing as, stepping the identity chip until it matches. */
-async function viewAs(page, needle, beat = 900) {
-  for (let i = 0; i < 4; i++) {
+/** Everything is clicked inside the page: the map animates continuously, so
+ *  Playwright's actionability check never sees these elements settle. */
+const clic = (page, sel) => page.evaluate((s) => document.querySelector(s)?.click(), sel);
+
+async function viewAs(page, needle, beat = 1100) {
+  for (let i = 0; i < 8; i++) {
     const now = await page.evaluate(() => document.querySelector('#identity-name').textContent);
     if (now && now.includes(needle)) return now;
-    await page.evaluate(() => document.querySelector('#identity').click());
+    await clic(page, '#identity');
     await sleep(beat);
   }
   throw new Error(`could not switch identity to ${needle}`);
+}
+
+/** The map loads its style over the network; nothing is worth filming until the
+ *  pins exist. */
+async function mapReady(page, limite = 40000) {
+  const fin = Date.now() + limite;
+  while (Date.now() < fin) {
+    const n = await page.evaluate(() => document.querySelectorAll('.pin').length);
+    if (n >= 6) return n;
+    await sleep(700);
+  }
+  throw new Error('the map never finished loading');
+}
+
+const NEGATIVO = /\b(declin\w*|reject\w*|refus\w*|unable|not available|no agreement|withdraw\w*|cancel\w*|failed|failure)\b/i;
+
+const CALENDARIO = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+  'saturday', 'sunday', 'morning', 'mornings', 'afternoon', 'afternoons', 'day',
+  'days', 'week', 'weekly', 'month', 'monthly', 'hour', 'hours', 'time', 'times',
+  'notice', 'available', 'availability', 'evening', 'evenings']);
+const palabras = (t) => new Set((String(t).toLowerCase().match(/[a-z]{3,}/g) || [])
+  .filter((w) => !CALENDARIO.has(w)));
+const dias = (t) => new Set(String(t).toLowerCase()
+  .match(/monday|tuesday|wednesday|thursday|friday|saturday|sunday/g) || []);
+
+/** The questions the deterministic guards ask, asked before the camera commits.
+ *  A take whose terms the guards will refuse has nothing for the signing scene. */
+async function revisar(page, t, orgId) {
+  const mios = await page.evaluate(async (org) => {
+    const d = await (await fetch('/api/state')).json();
+    return d.organizaciones.find((x) => x.org_id === org)
+      .recursos.map((r) => `${r.nombre} ${r.notas || ''}`);
+  }, orgId);
+
+  const fallos = [];
+  const need = dias(t.necesidad_cubierta), cond = dias(t.condiciones);
+  if (need.size && cond.size && ![...cond].some((d) => need.has(d)))
+    fallos.push(`conditions say [${[...cond]}] but the need is [${[...need]}]`);
+
+  const dado = palabras(t.recurso_entregado);
+  const mio = (r) => {
+    const mias = palabras(r);
+    const comunes = [...mias].filter((w) => dado.has(w)).length;
+    return comunes >= 2 && comunes >= Math.min(3, Math.floor(mias.size / 3));
+  };
+  if (!mios.some(mio))
+    fallos.push(`"${t.recurso_entregado}" is not one of this organization's resources`);
+
+  const quiero = palabras(t.necesidad_cubierta), recibo = palabras(t.recurso_recibido);
+  if (quiero.size && ![...recibo].some((w) => quiero.has(w)))
+    fallos.push(`"${t.recurso_recibido}" does not cover "${t.necesidad_cubierta}"`);
+
+  // A round once reached the pause with conditions reading "exchange declined by
+  // Central Library" on an agreement it was filing for signature. Every other
+  // check passed, because none of them read the terms for a sentence that
+  // contradicts the agreement existing at all.
+  for (const [campo, valor] of Object.entries(t)) {
+    if (typeof valor === 'string' && NEGATIVO.test(valor))
+      fallos.push(`${campo} says the exchange did not happen: "${valor}"`);
+  }
+  return fallos;
 }
 
 (async () => {
@@ -67,8 +133,8 @@ async function viewAs(page, needle, beat = 900) {
 
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
-    viewport: { width: W * SCALE, height: H * SCALE },
-    recordVideo: { dir, size: { width: W * SCALE, height: H * SCALE } },
+    viewport: { width: Math.round(W * SCALE), height: Math.round(H * SCALE) },
+    recordVideo: { dir, size: { width: Math.round(W * SCALE), height: Math.round(H * SCALE) } },
     deviceScaleFactor: 1,
   });
   const page = await ctx.newPage();
@@ -77,118 +143,50 @@ async function viewAs(page, needle, beat = 900) {
     if (document.documentElement) apply();
     else document.addEventListener('DOMContentLoaded', apply);
   }, SCALE);
+
   await page.goto(APP, { waitUntil: 'load', timeout: 60000 });
-  // Let the entry choreography finish before anything is recorded as "action".
-  await sleep(2200);
+  const pins = await mapReady(page);
+  console.log(`map up, ${pins} organizations`);
+  await sleep(2600);          // let the entry choreography finish
 
   if (mode === 'round') {
-    // A declined round does not end the moment the decision is sent: the agent
-    // still has to unwind. Waiting on the state rather than on a fixed sleep is
-    // what stops a retry loop from failing five times in a row on a round that
-    // was two seconds from finishing.
-    for (let i = 0; i < 45; i++) {
+    // A round left paused by a previous attempt blocks this one with a 409, and
+    // a declined round takes a moment to unwind. Clear it rather than failing.
+    for (let i = 0; i < 40; i++) {
       const s = await state(page);
       if (!s.pendiente && s.fase === 'inactiva') break;
+      if (s.pendiente) {
+        await page.evaluate(async (org) => {
+          await fetch('/api/round/interrupt', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ decision: 'rechazado', org_id: org }),
+          });
+        }, s.pendiente.org_id);
+      }
       if (i === 0) console.log('waiting for the previous round to unwind');
-      await sleep(2000);
+      await sleep(3000);
     }
-    const before = await state(page);
-    if (before.pendiente) throw new Error('a decision is already pending; resolve it before recording the round');
 
-    // Frame the neighborhood section BEFORE starting, or the take records a
-    // static funding panel while the map and the feed do all the work below the
-    // fold. The round button lives in this section's header, so one scroll puts
-    // the trigger, the map and the activity feed in the same frame.
-    //
-    // The position has to be re-asserted, not set once: the page re-renders on
-    // every state poll, the document height changes as the feed grows, and the
-    // scroll drifts back. `frame()` below is called every polling iteration.
-    const frame = () => page.evaluate(() => {
-      const y = document.querySelector('#net-h').getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: y, behavior: 'instant' });
-    });
-    await page.evaluate(() => {
-      const y = document.querySelector('#net-h').getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    });
-    await sleep(2400);
+    await clic(page, '#btn-round');
+    console.log('round started');
 
-    await page.evaluate(() => document.querySelector('#btn-round').click());
-    console.log('round started, recording discovery and negotiation');
-
-    // Record until the agents reach the human pause, so the take ends on the
-    // moment the next scene begins rather than on an arbitrary timer.
-    // Generous: a free-tier provider under load can spend minutes inside a single
-    // retry, and cutting the take short there wastes the round as well as the film.
     const deadline = Date.now() + 480000;
     let last = '';
     while (Date.now() < deadline) {
-      await frame();
       const s = await state(page);
-      if (s.fase !== last) { console.log('  phase:', s.fase); last = s.fase; }
-      if (s.pendiente) {
-        console.log('  paused for a human');
-        await sleep(2400);            // let the last feed rows land in frame
-        break;
-      }
+      if (s.fase !== last) { console.log(`  ${s.fase} · ${s.mensajes} messages`); last = s.fase; }
+      if (s.pendiente) { console.log('  paused for a human'); await sleep(3200); break; }
       await sleep(900);
     }
+
     const end = await state(page);
-    if (!end.pendiente) throw new Error('the round never reached the pause; nothing to sign in take B');
+    if (!end.pendiente) throw new Error('the round never reached the pause');
     const t = end.pendiente.argumentos;
     console.log('TERMS:', JSON.stringify(t, null, 2));
-
-    // The calendar guard refuses conditions naming a day the negotiation never
-    // agreed to, and it refuses them at the WRITE, after the human has signed.
-    // A take that ends there has no agreement for the signing scene, so check it
-    // now rather than discovering it two takes later.
-    const days = (s) => new Set((String(s).toLowerCase()
-      .match(/monday|tuesday|wednesday|thursday|friday|saturday|sunday/g) || []));
-    const need = days(t.necesidad_cubierta), cond = days(t.condiciones);
-    const reasons = [];
-    if (need.size && cond.size && ![...cond].some((d) => need.has(d)))
-      reasons.push(`conditions say [${[...cond]}] but the need is [${[...need]}]`);
-
-    // The direction guard refuses handing over a resource we do not own, and it
-    // also refuses at the write. Same reasoning as the day check: find out here.
-    const CAL = new Set(['monday','tuesday','wednesday','thursday','friday','saturday','sunday',
-      'morning','mornings','afternoon','afternoons','day','days','week','weekly','month','monthly',
-      'hour','hours','time','times','available','availability','notice']);
-    const words = (s) => new Set(String(s).toLowerCase().match(/[a-z]{3,}/g)?.filter((w) => !CAL.has(w)) || []);
-    const mine = await page.evaluate(async (org) => {
-      const d = await (await fetch('/api/state')).json();
-      const o = d.organizaciones.find((x) => x.org_id === org);
-      return o.recursos.map((r) => `${r.nombre} ${r.notas || ''}`);
-    }, end.pendiente.org_id);
-    // Two shared words, not one. A single overlap accepted "community room" as
-    // ours because our cold room is also a "room", which is the same false
-    // positive the ownership guard had with calendar words.
-    const given = words(t.recurso_entregado);
-    const overlap = (r, set) => [...words(r)].filter((w) => set.has(w)).length;
-    if (!mine.some((r) => overlap(r, given) >= 2))
-      reasons.push(`"${t.recurso_entregado}" is not one of this organization's own resources`);
-
-    // The mirror error, which no guard catches and a viewer does: receiving back
-    // something we already own, while the org plates in the same frame say so.
-    const got = words(t.recurso_recibido);
-    // The mirror check (is what we RECEIVE actually ours?) was removed: it kept
-    // rejecting correct takes because a van described with our own vocabulary
-    // overlapped our resource notes. A check that discards good material is
-    // worse than no check, since the terms are read by eye before the take is
-    // kept anyway.
-
-    // And the one a viewer catches fastest, because the need is on screen right
-    // beside it: receiving something that has nothing to do with what we needed.
-    // No guard refuses this — the coherence check compares against the neighbor's
-    // whole catalogue, so anything the neighbor ever mentioned satisfies it.
-    const want = words(t.necesidad_cubierta);
-    if (want.size && ![...got].some((w) => want.has(w)))
-      reasons.push(`"${t.recurso_recibido}" does not cover "${t.necesidad_cubierta}"`);
-
-    if (reasons.length) {
+    const fallos = await revisar(page, t, end.pendiente.org_id);
+    if (fallos.length) {
       console.log('\nDISCARD THIS TAKE:');
-      reasons.forEach((r) => console.log('  -', r));
-      console.log('The guards will refuse the write, so take B would have nothing to sign.');
+      fallos.forEach((f) => console.log('  -', f));
       process.exitCode = 2;
     }
   }
@@ -196,61 +194,64 @@ async function viewAs(page, needle, beat = 900) {
   if (mode === 'sign') {
     const s0 = await state(page);
     if (!s0.pendiente) throw new Error('no decision is pending; run the round take first');
+    const nombres = await page.evaluate(async () => {
+      const d = await (await fetch('/api/state')).json();
+      return Object.fromEntries(d.organizaciones.map((o) => [o.org_id, o.nombre]));
+    });
     const owner = s0.pendiente.org_id;
-    const ledgerBefore = s0.acuerdos;
+    const other = s0.pendiente.argumentos.contraparte_org_id;
 
-    // 1. The owning director reads the terms.
-    await viewAs(page, owner === 'north-food-bank' ? 'North Food Bank'
-                     : owner === 'central-library' ? 'Central Library' : 'San Martin School');
-    await sleep(2600);
+    // 1. The director whose decision it is reads the terms.
+    await viewAs(page, nombres[owner]);
+    await sleep(3200);
 
-    // 2. The proof shot: from another organization the decision is not there.
-    //    This is what makes the two-signature rule visible instead of claimed.
-    await viewAs(page, 'Central Library');
-    await sleep(3000);
+    // 2. The proof shot: from the counterpart's console the decision is not
+    //    there, and the panel names who is deciding instead.
+    await viewAs(page, nombres[other]);
+    await sleep(3400);
 
-    // 3. Back to the director whose decision it is, and sign.
-    await viewAs(page, 'North Food Bank');
-    await sleep(1600);
-    await page.evaluate(() => document.querySelector('#btn-sign').click());
-    await sleep(3400);                 // the acknowledgement, held long enough to read
+    // 3. Back, and sign.
+    await viewAs(page, nombres[owner]);
+    await sleep(1800);
+    await clic(page, '#btn-sign');
+    await sleep(4200);
 
-    // 4. The counterparty signs from the ledger. The row flips to cream here.
-    await viewAs(page, 'Central Library');
-    // The row does not exist the instant the pause resolves: the agent still has
-    // to finish the write and the page has to poll it back. Wait for the row
-    // rather than assuming a fixed delay is enough.
+    // 4. The counterpart is told the entry is waiting for them, and taken to it.
+    await viewAs(page, nombres[other]);
     for (let i = 0; i < 40; i++) {
-      const ready = await page.evaluate(() =>
-        [...document.querySelectorAll('#ledger .entry')].some((r) => r.querySelector('button')));
-      if (ready) break;
+      const listo = await page.evaluate(() => {
+        const go = document.querySelector('#allclear-go');
+        return go && !go.hidden;
+      });
+      if (listo) break;
       await sleep(1000);
     }
-    await sleep(1400);
-    // The app re-renders the ledger on every state poll, so every <li> handle
-    // Playwright takes goes stale and its retry loop never converges. Resolve
-    // and click inside the page instead, where the node cannot be swapped
-    // between finding it and using it.
+    await sleep(2400);
+    await clic(page, '#allclear-go');
+    await sleep(2600);
+
+    // 5. They sign from the ledger and the row turns cream.
     await page.evaluate(() => {
       const row = [...document.querySelectorAll('#ledger .entry')].find((r) => r.querySelector('button'));
       if (!row) throw new Error('no ledger row is waiting for a signature');
-      row.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    });
-    await sleep(1600);
-    await page.evaluate(() => {
-      const row = [...document.querySelectorAll('#ledger .entry')].find((r) => r.querySelector('button'));
       row.querySelector('button').click();
     });
-    await sleep(6500);                 // hold on the cream row and the acknowledgement
+    // Hold on the ledger while the row turns cream. This is the one moment the
+    // reserved colour appears, and an earlier take cut away to the map before it
+    // landed, so the scene never contained the thing it exists to show.
+    await sleep(7500);
+
+    // 6. And the line on the map is thicker than it was.
+    await clic(page, '.view[data-view="now"]');
+    await sleep(4500);
 
     const s1 = await state(page);
-    console.log('ledger:', ledgerBefore, '->', s1.acuerdos, '| pending:', !!s1.pendiente);
+    console.log(`ledger: ${s0.acuerdos} -> ${s1.acuerdos} · pending: ${!!s1.pendiente}`);
   }
 
   await ctx.close();
   await browser.close();
 
-  // Playwright names the file itself; rename to the requested path.
   const produced = fs.readdirSync(dir).filter((f) => f.endsWith('.webm'))
     .map((f) => ({ f, t: fs.statSync(path.join(dir, f)).mtimeMs }))
     .sort((a, b) => b.t - a.t)[0];

@@ -43,6 +43,11 @@ _pendiente: dict | None = None
 # demo and a coffee, short enough that an abandoned tab does not wedge the app.
 ESPERA_HUMANA = float(os.getenv("BARNRAISE_APPROVAL_TIMEOUT", "900"))
 
+# How many times one registration may stop for a human. A model that answers a
+# decline by calling the same tool again would otherwise keep the same decision
+# in front of the director forever, and the round would never end.
+MAX_PAUSAS = int(os.getenv("BARNRAISE_MAX_PAUSES", "3"))
+
 
 class PermisoDeFirma(RuntimeError):
     """One organization tried to sign another organization's decision."""
@@ -142,11 +147,21 @@ def _registrar(agente, prompt: str, titulo: str, org_id: str, intentos: int = 2)
     it answered with prose instead of calling the tool."""
     antes = _ultimo_id_acuerdo()
     result = invocar(agente, prompt, aviso=lambda m: events.publicar("reintento", mensaje=m))
+    rechazado = False
+    pausas = 0
     for intento in range(intentos):
-        while result.stop_reason == "interrupt":
+        # This loop had no bound. An agent that answers a decline by calling the
+        # same tool again put the decision the director had just refused straight
+        # back in front of them, and the round never ended: the app stayed busy
+        # and every later round returned 409 until the process was restarted. A
+        # decline ends it, and the ceiling ends it even if the model finds some
+        # other way to insist.
+        while result.stop_reason == "interrupt" and not rechazado and pausas < MAX_PAUSAS:
             interrupt = result.interrupts[0]
             herramienta, argumentos = _argumentos_de(interrupt)
+            pausas += 1
             decision = _esperar_decision(titulo, herramienta, argumentos, org_id)
+            rechazado = decision == "no"
             result = invocar(agente, [{
                 "interruptResponse": {"interruptId": interrupt.id, "response": decision}
             }], aviso=lambda m: events.publicar("reintento", mensaje=m))
@@ -156,11 +171,19 @@ def _registrar(agente, prompt: str, titulo: str, org_id: str, intentos: int = 2)
             # whatever the last decision happened to be.
             if decision == "yes":
                 _firmar_lo_asentado(org_id, desde_id=antes)
+        if rechazado:
+            events.publicar("reintento", mensaje="Declined. The agent stops asking.")
+            break
+        if pausas >= MAX_PAUSAS:
+            events.publicar(
+                "reintento",
+                mensaje=f"The agent asked {MAX_PAUSAS} times without settling. "
+                        "Ending the round.")
+            break
         # The ledger is the only honest witness that the tool ran. Reading the
         # agent's prose gave false negatives and asked the director to sign the
-        # same agreement twice. A rejection also ends the attempt: insisting
-        # would put back the very decision the human just declined.
-        if _ultimo_id_acuerdo() > antes or _ultima_decision == "no" or intento == intentos - 1:
+        # same agreement twice.
+        if _ultimo_id_acuerdo() > antes or intento == intentos - 1:
             break
         events.publicar("reintento", mensaje="The agent did not use the tool. Asking again.")
         result = invocar(agente, INSISTENCIA, aviso=lambda m: events.publicar("reintento", mensaje=m))
