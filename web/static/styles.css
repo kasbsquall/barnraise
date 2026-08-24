@@ -695,6 +695,11 @@ body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .event__text.is-typing::after { display: none; }
 }
+/* What the fund asks for, beside whether it is met. */
+.req__asks { font-family: var(--font-mono); font-size: var(--t-micro);
+             color: var(--ink-faint); letter-spacing: 0.06em;
+             font-variant-numeric: tabular-nums; margin-left: var(--s-2); }
+
 .dot { width: 9px; height: 9px; flex: none; border-radius: 2px; }
 /* The name in the organization's own colour, matching its route on the map. */
 .label--food   { color: var(--route-food); }

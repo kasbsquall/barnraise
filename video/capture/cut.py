@@ -31,6 +31,10 @@ CORTES = {
     # Three directors, one per beat. The card changes landed on 3.0 and 6.4,
     # which is where the narration wants them, so the cut is the head trim.
     's3': ('s3_raw.webm', [(4.5, 15.34)]),
+    # The funding call read from the top down: the amount, the requirements, what
+    # each organization covers alone, the whole neighborhood, and held on the
+    # collaboration requirement where the last three sentences land.
+    's7': ('s7_raw.webm', [(4.6, 37.36)]),
     's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
     's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }

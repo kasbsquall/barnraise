@@ -6,6 +6,7 @@ import {Neighborhood, NEIGHBORHOOD_DUR} from './scenes/Neighborhood';
 import {People, PEOPLE_DUR} from './scenes/People';
 import {Agents, AGENTS_DUR} from './scenes/Agents';
 import {Signatures, SIGNATURES_DUR} from './scenes/Signatures';
+import {Coalition, COALITION_DUR} from './scenes/Coalition';
 import {Close, CLOSE_DUR} from './scenes/Close';
 import {Captions} from './lib/Captions';
 import {FPS} from './theme';
@@ -56,6 +57,11 @@ export const RemotionRoot: React.FC = () => (
       id="S5-signatures"
       component={() => <Solo id="s5"><Signatures /></Solo>}
       durationInFrames={SIGNATURES_DUR} fps={FPS} width={1920} height={1080}
+    />
+    <Composition
+      id="S7-coalition"
+      component={() => <Solo id="s7"><Coalition /></Solo>}
+      durationInFrames={COALITION_DUR} fps={FPS} width={1920} height={1080}
     />
     <Composition
       id="S8-close"

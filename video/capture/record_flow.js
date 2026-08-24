@@ -2,6 +2,7 @@
 //
 //   node record_flow.js orgs  <out.webm>   S2: the six, one card at a time
 //   node record_flow.js people <out.webm>  S3: three directors, named
+//   node record_flow.js grant <out.webm>   S7: the funding call, read down
 //   node record_flow.js round <out.webm>   S4: a round running on the map
 //   node record_flow.js pause <out.webm>   S1: the panel waiting for a person
 //   node record_flow.js sign  <out.webm>   S5: both signatures
@@ -40,8 +41,8 @@ const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
 
 const mode = process.argv[2];
 const out = process.argv[3];
-if (!['orgs', 'people', 'round', 'pause', 'sign'].includes(mode) || !out) {
-  console.error('usage: node record_flow.js <orgs|people|round|pause|sign> <out.webm>');
+if (!['orgs', 'people', 'grant', 'round', 'pause', 'sign'].includes(mode) || !out) {
+  console.error('usage: node record_flow.js <orgs|people|grant|round|pause|sign> <out.webm>');
   process.exit(1);
 }
 
@@ -219,6 +220,46 @@ async function revisar(page, t, orgId) {
       (document.querySelector('.orgcard .hint')?.textContent || '').trim());
     if (!/Marta Ochoa/.test(visto)) throw new Error(`last card shows "${visto}"`);
     console.log('last card:', visto);
+  }
+
+  if (mode === 'grant') {
+    // The funding call, read from the top down. Everything the narration says is
+    // in this one view, so the movement is a slow crawl rather than a tour: the
+    // amount first, then the requirements, then what each organization covers
+    // alone, then the whole neighborhood. It ends held on the collaboration
+    // requirement, which is where the last three sentences land.
+    await page.evaluate(() => document.querySelector('.view[data-view="fund"]')?.click());
+    await sleep(2600);
+
+    const alcance = await page.evaluate(() => {
+      const c = document.querySelector('.panel__body');
+      return Math.max(0, c.scrollHeight - c.clientHeight);
+    });
+    console.log('scroll available:', alcance, 'px');
+
+    // Eased by hand rather than with scroll-behavior, because a smooth scroll is
+    // the browser's curve and this one has to match a sentence.
+    const pasos = 150, desde = 3000, hasta = 21000;
+    const t0 = Date.now();
+    for (let i = 0; i <= pasos; i++) {
+      const objetivo = desde + ((hasta - desde) * i) / pasos;
+      const espera = objetivo - (Date.now() - t0);
+      if (espera > 0) await sleep(espera);
+      const p = i / pasos;
+      const suave = p * p * p * (p * (p * 6 - 15) + 10);
+      await page.evaluate((y) => {
+        const c = document.querySelector('.panel__body');
+        if (c) c.scrollTop = y;
+      }, Math.round(alcance * suave));
+    }
+    await sleep(11000);
+
+    const visto = await page.evaluate(() => {
+      const req = [...document.querySelectorAll('.req')].pop();
+      return (req?.innerText || '').replace(/\s+/g, ' ').trim();
+    });
+    console.log('held on:', visto);
+    if (!/asks for 3/.test(visto)) throw new Error('the collaboration threshold is not on screen');
   }
 
   if (mode === 'round') {

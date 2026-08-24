@@ -286,9 +286,19 @@ function renderFund() {
       : who.includes("together") || who.includes("agreements")
         ? `<span class="cap cap--all">${esc(who)}</span>`
         : who.split(", ").map((o) => `<span class="cap cap--${routeOf(o)}">${initials(o)}</span>`).join("");
+    // What the fund demands, next to whether it is met. A requirement that shows
+    // only the verdict asks the reader to trust the verdict; the threshold is
+    // what lets them check it, and it is the difference between "8 agreements in
+    // the ledger" meaning something and meaning nothing.
+    const pide = r.acuerdos_minimos
+      ? `asks for ${r.acuerdos_minimos}`
+      : r.poblacion_minima
+        ? `asks for ${r.poblacion_minima.toLocaleString("en-US")}`
+        : "";
     row.innerHTML =
       `<span class="req__id">${esc(r.id)}</span>` +
-      `<span class="req__who">${caps}</span>` +
+      `<span class="req__who">${caps}` +
+        (pide ? `<span class="req__asks">${esc(pide)}</span>` : "") + `</span>` +
       `<span class="req__text">${esc(r.descripcion)}` +
         (r.tipo === "colaboracion" ? ' <span class="label">this is what the ledger is for</span>' : "") +
       `</span>`;
