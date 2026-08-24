@@ -1,5 +1,6 @@
 // Records the Barnraise flow for scenes S4 and S5 of the pitch film.
 //
+//   node record_flow.js orgs  <out.webm>   S2: the six, one card at a time
 //   node record_flow.js round <out.webm>   S4: a round running on the map
 //   node record_flow.js pause <out.webm>   S1: the panel waiting for a person
 //   node record_flow.js sign  <out.webm>   S5: both signatures
@@ -38,8 +39,8 @@ const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
 
 const mode = process.argv[2];
 const out = process.argv[3];
-if (!['round', 'pause', 'sign'].includes(mode) || !out) {
-  console.error('usage: node record_flow.js <round|pause|sign> <out.webm>');
+if (!['orgs', 'round', 'pause', 'sign'].includes(mode) || !out) {
+  console.error('usage: node record_flow.js <orgs|round|pause|sign> <out.webm>');
   process.exit(1);
 }
 
@@ -153,6 +154,42 @@ async function revisar(page, t, orgId) {
   const pins = await mapReady(page);
   console.log(`map up, ${pins} organizations`);
   await sleep(2600);          // let the entry choreography finish
+
+  if (mode === 'orgs') {
+    // Each card lands on the sentence that names its organization, so the beats
+    // are the narration's, measured out of the recorded voice rather than
+    // guessed. Clicking a pin opens its card and takes the map there, which is
+    // the product's own behaviour and exactly what the line asks for.
+    const paso = async (org, espera) => {
+      await page.evaluate((o) => document.querySelector(`.pin[data-org="${o}"]`)?.click(), org);
+      await sleep(espera);
+    };
+    await sleep(4600);                                   // the six, before anything is named
+    await paso('central-library', 3700);
+    await paso('north-food-bank', 3800);
+    await paso('casa-vecinal-kitchen', 5200);
+
+    // The last line says how close they are and that none of them can see what
+    // the others have. Both halves need to be on screen: the card's own list of
+    // real driving distances, and the whole neighborhood behind it.
+    await page.evaluate((o) => document.querySelector(`.pin[data-org="${o}"]`)?.click(), 'central-library');
+    await sleep(700);
+    await page.evaluate(() => {
+      window.NB?.frameAll?.();
+      // Scroll to the top of the card, not to the distance list. Aiming at the
+      // list left the round button sliced in half against the tab bar above it,
+      // and the whole card fits in the panel anyway.
+      const cuerpo = document.querySelector('.panel__body');
+      const tarjeta = document.querySelector('.orgcard');
+      if (cuerpo && tarjeta) cuerpo.scrollTop = tarjeta.offsetTop - 16;
+    });
+    await sleep(7200);
+
+    const visto = await page.evaluate(() =>
+      (document.querySelector('.dists')?.textContent || '').trim().slice(0, 120));
+    if (!visto) throw new Error('the distance list never came into view');
+    console.log('distances on screen:', visto);
+  }
 
   if (mode === 'round') {
     // A round left paused by a previous attempt blocks this one with a 409, and

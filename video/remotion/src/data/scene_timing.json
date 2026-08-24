@@ -19,16 +19,16 @@
   "id": "s2",
   "titulo": "SIX ORGANIZATIONS, SEVEN HUNDRED METRES APART",
   "slot": 27,
-  "vo": "Six community organizations, all inside one district. A library with a van that sits idle on Tuesdays. A food bank with cold room space it does not fill. A kitchen with six burners nobody uses before four in the afternoon. They are seven hundred metres apart and none of them knows what the others have.",
+  "vo": "Six community organizations, all inside one district. A library with a van that sits idle on Tuesdays. A food bank with cold room space it does not fill. A kitchen with six burners nobody uses before four in the afternoon. They are seven hundred metres apart, and none of them can see what the others have idle.",
   "est": 25.0,
-  "vo_dur": 22.24,
+  "vo_dur": 23.45,
   "lead": 0.5,
   "tail": 0.9,
-  "dur": 23.64,
+  "dur": 24.85,
   "start": 10.56,
-  "end": 34.2,
+  "end": 35.41,
   "startF": 317,
-  "durF": 709,
+  "durF": 746,
   "voStart": 11.06
  },
  {
@@ -41,11 +41,11 @@
   "lead": 0.5,
   "tail": 1.2,
   "dur": 10.24,
-  "start": 34.2,
-  "end": 44.44,
-  "startF": 1026,
+  "start": 35.41,
+  "end": 45.65,
+  "startF": 1062,
   "durF": 307,
-  "voStart": 34.7
+  "voStart": 35.91
  },
  {
   "id": "s4",
@@ -57,11 +57,11 @@
   "lead": 0.8,
   "tail": 3.2,
   "dur": 31.4,
-  "start": 44.44,
-  "end": 75.84,
-  "startF": 1333,
+  "start": 45.65,
+  "end": 77.05,
+  "startF": 1370,
   "durF": 942,
-  "voStart": 45.24
+  "voStart": 46.45
  },
  {
   "id": "s5",
@@ -73,11 +73,11 @@
   "lead": 0.6,
   "tail": 4.0,
   "dur": 31.54,
-  "start": 75.84,
-  "end": 107.38,
-  "startF": 2275,
+  "start": 77.05,
+  "end": 108.59,
+  "startF": 2312,
   "durF": 946,
-  "voStart": 76.44
+  "voStart": 77.65
  },
  {
   "id": "s6",
@@ -89,11 +89,11 @@
   "lead": 0.5,
   "tail": 1.2,
   "dur": 20.46,
-  "start": 107.38,
-  "end": 127.84,
-  "startF": 3221,
+  "start": 108.59,
+  "end": 129.05,
+  "startF": 3258,
   "durF": 614,
-  "voStart": 107.88
+  "voStart": 109.09
  },
  {
   "id": "s7",
@@ -105,11 +105,11 @@
   "lead": 0.5,
   "tail": 1.2,
   "dur": 32.16,
-  "start": 127.84,
-  "end": 160.0,
-  "startF": 3835,
+  "start": 129.05,
+  "end": 161.21,
+  "startF": 3872,
   "durF": 965,
-  "voStart": 128.34
+  "voStart": 129.55
  },
  {
   "id": "s8",
@@ -121,10 +121,10 @@
   "lead": 0.4,
   "tail": 3.2,
   "dur": 11.73,
-  "start": 160.0,
-  "end": 171.73,
-  "startF": 4800,
+  "start": 161.21,
+  "end": 172.94,
+  "startF": 4836,
   "durF": 352,
-  "voStart": 160.4
+  "voStart": 161.61
  }
 ]

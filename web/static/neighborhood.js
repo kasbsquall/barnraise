@@ -20,6 +20,7 @@ const MAP = {
 let map = null;
 let routes = [];               // {a, b, metros, segundos, linea}
 let markers = new Map();       // org_id -> maplibregl.Marker
+let orgsConocidas = [];        // the organizations the map was built from
 let mapReady = false;
 const pending = [];            // pulses asked for before the style finished loading
 
@@ -57,6 +58,9 @@ function markerEl(org, onClick) {
 
 function buildMap(organizaciones, onSelect) {
   if (map) return;
+  // The map keeps the list it was built from, so anything that needs to reframe
+  // the whole neighborhood can ask for it without being handed it again.
+  orgsConocidas = organizaciones;
   const holder = document.getElementById("map");
   if (!holder || typeof maplibregl === "undefined") return;
 
@@ -357,9 +361,9 @@ function libre() {
 /** Frames every organization at once. A fixed centre and zoom was leaving two of
  *  the six outside the viewport and crowding the rest against the panel, and it
  *  would drift further out of true every time an organization was added. */
-function frameAll(organizaciones, animate = true) {
+function frameAll(organizaciones = orgsConocidas, animate = true) {
   if (!mapReady) return;
-  const pts = organizaciones.filter((o) => o.ubicacion)
+  const pts = (organizaciones || []).filter((o) => o.ubicacion)
     .map((o) => [o.ubicacion.lon, o.ubicacion.lat]);
   if (pts.length < 2) return;
   const b = pts.reduce((acc, c) => acc.extend(c),

@@ -94,7 +94,15 @@ road to its neighbours.
 **VO.** "Six community organizations, all inside one district. A library with a
 van that sits idle on Tuesdays. A food bank with cold room space it does not
 fill. A kitchen with six burners nobody uses before four in the afternoon. They
-are seven hundred metres apart and none of them knows what the others have."
+are seven hundred metres apart, and none of them can see what the others have
+idle."
+
+**Careful.** The line was "none of them knows what the others have", and the map
+in this scene carries seven agreements they have already signed, which
+contradicts it in the same frame. What is true, and is the actual guarantee the
+product makes, is that no agent has a tool returning a neighbor's inventory: they
+cannot SEE what the others have idle. Past collaboration and present blindness
+are different claims and only one of them is on screen.
 
 **Claim → proof.** Every distance on screen is a real driving route over
 OpenStreetMap data. The seven hundred metres is the library to the food bank: the

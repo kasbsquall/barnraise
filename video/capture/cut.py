@@ -24,6 +24,10 @@ CORTES = {
     # The cold open holds on the pause. The first two seconds are the page
     # loading and its entry choreography, which belong to nothing.
     's1': ('s1_raw.webm', [(2.6, 14.0)]),
+    # Each card opens on the sentence that names its organization. The beats
+    # landed within a tenth of a second of the recorded narration, so the cut is
+    # just the page-load head trimmed off.
+    's2': ('s2_raw.webm', [(4.3, 29.7)]),
     's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
     's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }
