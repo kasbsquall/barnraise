@@ -8,7 +8,11 @@ from pathlib import Path
 
 AQUI = Path(__file__).parent
 FPS = 30
-MUS_VOL   = 0.52     # the bed, before ducking
+MUS_VOL   = 0.416    # the bed, before ducking. Was 0.52; down a fifth on a
+                     # listen of the finished film, where the music sat close
+                     # enough to the voice to compete with it. This is the gain
+                     # BEFORE the sidechain, so it comes down by the same fifth
+                     # under the narration and in the gaps between sentences.
 VO_VOL    = 0.5      # -6 dB: the TTS comes back at about -0.2 dBFS with no headroom
 RATIO     = 6        # 9 crushed the mix on an earlier film; 6 ducks without pumping
 THRESHOLD = 0.02
