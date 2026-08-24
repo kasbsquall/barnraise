@@ -10,6 +10,9 @@ resulting history into the evidence funders keep asking for.
 Built with the [Strands Agents SDK](https://strandsagents.com/) for the AWS
 Agents for Humans Hackathon, track **Good Neighbor Agents**.
 
+**Watch it work:** [youtube.com/watch?v=sdSvH0PwtYQ](https://www.youtube.com/watch?v=sdSvH0PwtYQ)
+· 2:53 · six agents negotiating, two signatures, and what the product refuses to do.
+
 ---
 
 ## The problem
