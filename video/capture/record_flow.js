@@ -1,6 +1,7 @@
 // Records the Barnraise flow for scenes S4 and S5 of the pitch film.
 //
 //   node record_flow.js orgs  <out.webm>   S2: the six, one card at a time
+//   node record_flow.js people <out.webm>  S3: three directors, named
 //   node record_flow.js round <out.webm>   S4: a round running on the map
 //   node record_flow.js pause <out.webm>   S1: the panel waiting for a person
 //   node record_flow.js sign  <out.webm>   S5: both signatures
@@ -39,8 +40,8 @@ const SCALE = Number(process.env.CAPTURE_SCALE || 4 / 3);
 
 const mode = process.argv[2];
 const out = process.argv[3];
-if (!['orgs', 'round', 'pause', 'sign'].includes(mode) || !out) {
-  console.error('usage: node record_flow.js <orgs|round|pause|sign> <out.webm>');
+if (!['orgs', 'people', 'round', 'pause', 'sign'].includes(mode) || !out) {
+  console.error('usage: node record_flow.js <orgs|people|round|pause|sign> <out.webm>');
   process.exit(1);
 }
 
@@ -189,6 +190,35 @@ async function revisar(page, t, orgId) {
       (document.querySelector('.dists')?.textContent || '').trim().slice(0, 120));
     if (!visto) throw new Error('the distance list never came into view');
     console.log('distances on screen:', visto);
+  }
+
+  if (mode === 'people') {
+    // Three cards, one per sentence beat, each held long enough to read a name.
+    // The three the narration names: Ana Torres at the library, Luis Mendoza at
+    // the food bank, Marta Ochoa at the kitchen. The card carries the director,
+    // the population served and the address, which is the whole point of the
+    // line: these are six people, not six systems.
+    // Opening a card sends the panel back to the top, which buries the card under
+    // the all-clear and the "you are" block: the frame ended up saying Luis
+    // Mendoza while the card was about Marta Ochoa. Scroll to the card each time.
+    const paso = async (org, espera) => {
+      await page.evaluate((o) => document.querySelector(`.pin[data-org="${o}"]`)?.click(), org);
+      await sleep(260);
+      await page.evaluate(() => {
+        const cuerpo = document.querySelector('.panel__body');
+        const tarjeta = document.querySelector('.orgcard');
+        if (cuerpo && tarjeta) cuerpo.scrollTop = tarjeta.offsetTop - 16;
+      });
+      await sleep(espera - 260);
+    };
+    await paso('central-library', 3000);
+    await paso('north-food-bank', 3400);
+    await paso('casa-vecinal-kitchen', 4600);
+
+    const visto = await page.evaluate(() =>
+      (document.querySelector('.orgcard .hint')?.textContent || '').trim());
+    if (!/Marta Ochoa/.test(visto)) throw new Error(`last card shows "${visto}"`);
+    console.log('last card:', visto);
   }
 
   if (mode === 'round') {

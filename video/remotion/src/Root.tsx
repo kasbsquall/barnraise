@@ -3,6 +3,7 @@ import {AbsoluteFill, Audio, Composition, staticFile} from 'remotion';
 import timing from './data/scene_timing.json';
 import {Pause, PAUSE_DUR} from './scenes/Pause';
 import {Neighborhood, NEIGHBORHOOD_DUR} from './scenes/Neighborhood';
+import {People, PEOPLE_DUR} from './scenes/People';
 import {Agents, AGENTS_DUR} from './scenes/Agents';
 import {Signatures, SIGNATURES_DUR} from './scenes/Signatures';
 import {Close, CLOSE_DUR} from './scenes/Close';
@@ -40,6 +41,11 @@ export const RemotionRoot: React.FC = () => (
       id="S2-neighborhood"
       component={() => <Solo id="s2"><Neighborhood /></Solo>}
       durationInFrames={NEIGHBORHOOD_DUR} fps={FPS} width={1920} height={1080}
+    />
+    <Composition
+      id="S3-people"
+      component={() => <Solo id="s3"><People /></Solo>}
+      durationInFrames={PEOPLE_DUR} fps={FPS} width={1920} height={1080}
     />
     <Composition
       id="S4-agents"

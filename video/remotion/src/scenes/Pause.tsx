@@ -37,9 +37,17 @@ const SALIDA = 282;                      // the pull-back, as the narration land
 // reads as a broken render. Fully out is a deliberate crop, so the frame starts
 // below them, and the film opens with no chrome and no logo: an agent that has
 // stopped.
+// The pan is vertical only, and cx stays at 960.
+//
+// At scale 1 the window is 1920 across a 2560 plate, so the leftmost the camera
+// can sit without showing past the plate is cx 960. Panning right from there
+// walks the frame off the panel, and the panel is pinned to the left edge of the
+// page: measured at the end of an earlier pan, bright type was sitting in the
+// first eight columns of the frame, which is the panel being sliced. Vertical
+// movement has plate above and below to spend and cannot do that.
 const CAM: Key[] = [
-  {f: 0, cx: 960, cy: 716, s: 1},
-  {f: SALIDA, cx: 1084, cy: 748, s: 1},
+  {f: 0, cx: 960, cy: 712, s: 1},
+  {f: SALIDA, cx: 960, cy: 762, s: 1},
   {f: DUR, cx: PLATE.w / 2, cy: PLATE.h / 2, s: FIT},
 ];
 

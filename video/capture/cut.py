@@ -28,6 +28,9 @@ CORTES = {
     # landed within a tenth of a second of the recorded narration, so the cut is
     # just the page-load head trimmed off.
     's2': ('s2_raw.webm', [(4.3, 29.7)]),
+    # Three directors, one per beat. The card changes landed on 3.0 and 6.4,
+    # which is where the narration wants them, so the cut is the head trim.
+    's3': ('s3_raw.webm', [(4.5, 15.34)]),
     's4': ('s4_raw.webm', [(25.0, 45.0), (65.5, 77.5)]),
     's5': ('s5_raw.webm', [(12.4, 44.6)]),
 }
