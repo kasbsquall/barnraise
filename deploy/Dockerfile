@@ -23,6 +23,7 @@ RUN useradd --system --uid 10001 barnraise \
 USER barnraise
 
 ENV BARNRAISE_DEMO=1 \
+    BARNRAISE_HOST=0.0.0.0 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
