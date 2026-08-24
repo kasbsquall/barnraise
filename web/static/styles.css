@@ -191,7 +191,13 @@ body { overflow: hidden; }
   border: 1px solid var(--rule);
   overflow: hidden;
 }
-.panel__body { overflow-y: auto; overscroll-behavior: contain; padding: var(--s-6); }
+.panel__body { flex: 1; min-height: 0; display: flex; flex-direction: column;
+               overflow-y: auto; overscroll-behavior: contain; padding: var(--s-6); }
+/* The feed is the subject of the live view, so it takes the space that is left
+   rather than a fixed 560px that ran past the bottom of the panel and hid every
+   message the moment one arrived. */
+.view-pane[data-pane="now"] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.view-pane[data-pane="now"] .feed-block { flex: 1; min-height: 0; }
 .panel__body > * + * { margin-top: var(--s-6); }
 
 .views { display: flex; border-bottom: 1px solid var(--rule); flex: none; }
@@ -277,14 +283,20 @@ body { overflow: hidden; }
 .pin--waiting .pin__name { color: var(--field); background: var(--ink); border-color: var(--ink); }
 
 /* Where this director stands. */
-.youare { background: var(--plate-low); border: 1px solid var(--rule); padding: var(--s-4);
-          border-left-width: 3px; }
-.youare--food   { border-left-color: var(--route-food); }
-.youare--lib    { border-left-color: var(--route-lib); }
-.youare--school { border-left-color: var(--route-school); }
-.youare--health { border-left-color: var(--route-health); }
-.youare--kitchen{ border-left-color: var(--route-kitchen); }
-.youare--youth  { border-left-color: var(--route-youth); }
+/* The organization reads through the eyebrow and a wash of its own colour across
+   the whole block. It used to be a 3px coloured stripe down the left edge, which
+   is the single most recognisable tell of a generated interface. */
+.youare { border: 1px solid var(--rule); padding: var(--s-4);
+          background:
+            linear-gradient(100deg, color-mix(in oklab, var(--org) 14%, transparent), transparent 62%),
+            var(--plate-low); }
+.youare__eyebrow { color: var(--org); }
+.youare--food   { --org: var(--route-food); }
+.youare--lib    { --org: var(--route-lib); }
+.youare--school { --org: var(--route-school); }
+.youare--health { --org: var(--route-health); }
+.youare--kitchen{ --org: var(--route-kitchen); }
+.youare--youth  { --org: var(--route-youth); }
 .youare__who { margin: var(--s-1) 0 var(--s-3); font-size: var(--t-body); }
 .youare__facts { list-style: none; margin: 0; padding: 0;
                  display: flex; flex-direction: column; gap: var(--s-2);
@@ -650,7 +662,7 @@ body { overflow: hidden; }
 .legend__swatch { width: 18px; height: 3px; }
 
 .feed { display: flex; flex-direction: column; gap: var(--gutter);
-        max-height: min(58vh, 560px); overflow-y: auto; overscroll-behavior: contain;
+        flex: 1 1 auto; min-height: 9rem; overflow-y: auto; overscroll-behavior: contain;
         background: var(--rule-soft); }
 .event { background: var(--plate-low); padding: var(--s-3) var(--s-4); display: grid;
          grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--s-3); }

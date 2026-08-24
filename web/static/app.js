@@ -115,7 +115,13 @@ function clean(text) {
     .replace(/(^|[\s(])\*([^*\n]+)\*/g, "$1$2")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/^\s*[-*+]\s+/gm, "· ")
-    .replace(/\[(R|N|REQ)\d+\]\s*/g, "")   // internal ids never reach the reader
+    // The seed profiles number resources and needs R1, N1, REQ1 so an agent can
+    // refer to them precisely, and the agents echo those tags back into prose.
+    // They mean nothing to a director reading the screen. Bracketed, parenthesised
+    // and bare all show up: "[N1] van transport", "Delivery Van (R1)", "N1 van
+    // transport" have each reached the panel.
+    .replace(/[[(](R|N|REQ)\d+[\])]\s*/gi, "")
+    .replace(/^\s*(R|N|REQ)\d+\b[\s:.-]*/i, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -183,10 +189,14 @@ function render() {
   if (state.actividad?.length) {
     // History is replayed, not re-lived: these events already happened, so they
     // are painted whole. Only what arrives over the stream is typed.
-    $("#feed").replaceChildren();
+    const feed = $("#feed");
+    feed.replaceChildren();
     state.actividad.forEach((e) => addEvent(e, false));
+    feed.scrollTop = feed.scrollHeight;
   }
 }
+
+let centrado = null;   // the identity the map was last moved for
 
 function renderIdentity() {
   $("#identity-name").textContent = `${dirOf(me)} · ${nameOf(me)}`;
@@ -198,7 +208,15 @@ function renderIdentity() {
   document.querySelectorAll(".pin").forEach((el) => {
     el.classList.toggle("pin--me", el.dataset.org === me);
   });
-  window.NB?.centreOn(me, state?.organizaciones || []);
+  // Moving the map answers a switch of identity. It is not something to redo on
+  // every repaint: render() runs again on every decision that arrives, so this
+  // was yanking the map mid-round, and on first paint it overrode the framing
+  // that puts all six organizations on screen with a jump to whichever one you
+  // happen to be.
+  if (centrado !== me) {
+    if (centrado !== null) window.NB?.centreOn(me, state?.organizaciones || []);
+    centrado = me;
+  }
   renderYouAre();
 }
 
@@ -225,7 +243,7 @@ function renderYouAre() {
   box.replaceChildren();
   const wrap = el("div", `youare youare--${routeOf(me)}`);
   wrap.innerHTML =
-    `<p class="label">You are</p>` +
+    `<p class="label youare__eyebrow">You are</p>` +
     `<p class="youare__who"><strong>${esc(dirOf(me))}</strong> at ${esc(o.nombre)}</p>` +
     `<ul class="youare__facts">` +
       `<li><span class="youare__n">${o.recursos.length}</span> things idle</li>` +
@@ -584,7 +602,12 @@ const RESOURCE_ICON = (t) => {
 
 function renderPhase(fase) {
   const bar = $("#live");
+  const cambio = bar.dataset.fase !== fase;
   bar.dataset.fase = fase;
+  if (cambio && state?.ronda) {
+    state.ronda.fase = fase;
+    renderPending(state.ronda.pendiente || null);
+  }
   $("#live-text").textContent = PHASE[fase] || fase;
   const busy = fase !== "idle" && fase !== "inactiva";
   [$("#btn-round"), ...document.querySelectorAll("[data-coalition]")].forEach((b) => {
@@ -598,7 +621,7 @@ const TERM_LABEL = {
   recurso_recibido: "We receive",
   recurso_entregado: "We give",
   condiciones: "Conditions",
-  necesidad_cubierta: "Need it covers",
+  necesidad_cubierta: "Why we need it",
   org_ids: "Organizations",
   roles: "Roles",
   presupuesto: "Budget split",
@@ -673,16 +696,30 @@ function renderPending(pending) {
       $("#allclear-go").hidden = false;
       $("#allclear-go").querySelector("span").textContent = `Go to entry #${first.id}`;
       $("#allclear-go").onclick = () => {
-        const row = [...document.querySelectorAll("#ledger .entry")]
-          .find((r) => r.dataset.id === String(first.id));
-        if (!row) return;
-        row.scrollIntoView({block: "center", behavior: REDUCE.matches ? "auto" : "smooth"});
-        row.querySelector("button")?.focus();
+        // The row lives in the Agreements view, so from here it is inside a
+        // hidden pane: scrolling to it moved nothing and focusing it failed
+        // silently. Switch first, then go.
+        mostrarVista("ledger");
+        requestAnimationFrame(() => {
+          const row = [...document.querySelectorAll("#ledger .entry")]
+            .find((r) => r.dataset.id === String(first.id));
+          if (!row) return;
+          row.scrollIntoView({block: "center", behavior: REDUCE.matches ? "auto" : "smooth"});
+          row.querySelector("button")?.focus();
+        });
       };
       return;
     }
 
     $("#allclear-go").hidden = true;
+    const fase = state.ronda?.fase;
+    if (fase && fase !== "idle" && fase !== "inactiva") {
+      $("#allclear-icon").setAttribute("href", "#i-clock");
+      $("#allclear-title").textContent = "Your agent is working right now.";
+      $("#allclear-detail").textContent =
+        "It is talking to the neighbors below. You will be asked to sign if it settles on terms.";
+      return;
+    }
     $("#allclear-icon").setAttribute("href", "#i-check");
     $("#allclear-title").textContent = "Nothing needs you right now.";
     $("#allclear-detail").textContent = waiting.length
@@ -774,6 +811,7 @@ function followFeed(list, item) {
   list.append(item);
   if (atBottom) list.scrollTop = list.scrollHeight;
   while (list.children.length > 60) list.firstElementChild.remove();
+  return atBottom;
 }
 
 function addEvent(ev, live = false) {
@@ -827,10 +865,14 @@ function addEvent(ev, live = false) {
 
   body.append(route, text);
   item.append(body);
-  followFeed(list, item);
+  const seguir = followFeed(list, item);
   // After it is in the document, so the reserved box can be measured.
   if (live) typeInto(text, typed);
   else text.textContent = typed;
+  // The row was still empty when it was appended, so pinning at that moment left
+  // the column short by the whole height of the message and the newest row sat
+  // cut off against the bottom edge. Pin again now the box is reserved.
+  if (seguir) list.scrollTop = list.scrollHeight;
 }
 
 function connect() {

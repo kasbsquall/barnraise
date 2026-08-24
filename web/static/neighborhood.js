@@ -161,6 +161,7 @@ function buildMap(organizaciones, onSelect) {
         .addTo(map);
       markers.set(o.org_id, m);
     });
+    frameAll(organizaciones, false);
     while (pending.length) { const p = pending.shift(); pulseRoute(p.from, p.to); }
     document.dispatchEvent(new CustomEvent("map:ready"));
   });
@@ -281,13 +282,42 @@ function ring(orgId) {
   setTimeout(() => el.classList.remove("pin--hit"), 560);
 }
 
+/** The part of the map the panel is not covering. Read from the DOM rather than
+ *  hard-coded, because the panel collapses at narrow widths. */
+function libre() {
+  const panel = document.querySelector(".panel");
+  const izq = panel && !panel.hidden ? panel.getBoundingClientRect().right : 0;
+  return {left: Math.round(izq) + 40, right: 96, top: 96, bottom: 215};
+}
+
+/** Frames every organization at once. A fixed centre and zoom was leaving two of
+ *  the six outside the viewport and crowding the rest against the panel, and it
+ *  would drift further out of true every time an organization was added. */
+function frameAll(organizaciones, animate = true) {
+  if (!mapReady) return;
+  const pts = organizaciones.filter((o) => o.ubicacion)
+    .map((o) => [o.ubicacion.lon, o.ubicacion.lat]);
+  if (pts.length < 2) return;
+  const b = pts.reduce((acc, c) => acc.extend(c),
+    new maplibregl.LngLatBounds(pts[0], pts[0]));
+  const opts = {padding: libre(), maxZoom: 15.4, duration: animate ? 900 : 0};
+  if (animate) map.fitBounds(b, opts); else map.fitBounds(b, {...opts, duration: 0});
+}
+
+/** How far right of centre to place a single organization so the panel is not
+ *  sitting on top of it. */
+function aparte() {
+  const l = libre().left;
+  return Math.round(l / 2);
+}
+
 /** Eases the map so the organization you are viewing as is in frame. */
 function centreOn(orgId, organizaciones) {
   if (!mapReady || !orgId) return;
   const o = organizaciones.find((x) => x.org_id === orgId);
   if (!o?.ubicacion) return;
   map.easeTo({center: [o.ubicacion.lon, o.ubicacion.lat], zoom: 14.9,
-              offset: [-180, 0], duration: 850});
+              offset: [aparte(), 0], duration: 850});
 }
 
 /** Marks the pins whose director has something to decide. */
@@ -301,13 +331,13 @@ function markWaiting(orgIds) {
 function focusOrg(orgId, organizaciones) {
   if (!mapReady) return;
   if (!orgId) {
-    map.easeTo({center: MAP.centre, zoom: MAP.zoom, duration: 700});
+    frameAll(organizaciones);
     return;
   }
   const o = organizaciones.find((x) => x.org_id === orgId);
   if (!o?.ubicacion) return;
   map.easeTo({center: [o.ubicacion.lon, o.ubicacion.lat], zoom: 15.6,
-              offset: [-180, 0], duration: 750});
+              offset: [aparte(), 0], duration: 750});
 }
 
 async function loadRoutes() {
@@ -324,5 +354,5 @@ async function loadRoutes() {
 // One namespace instead of six globals, so it is obvious in app.js where each of
 // these comes from.
 window.NB = {
-  buildMap, drawLinks, pulseRoute, markWaiting, focusOrg, centreOn, loadRoutes, routeLabel,
+  buildMap, frameAll, drawLinks, pulseRoute, markWaiting, focusOrg, centreOn, loadRoutes, routeLabel,
 };
