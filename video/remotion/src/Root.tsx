@@ -5,6 +5,7 @@ import {Pause, PAUSE_DUR} from './scenes/Pause';
 import {Neighborhood, NEIGHBORHOOD_DUR} from './scenes/Neighborhood';
 import {Agents, AGENTS_DUR} from './scenes/Agents';
 import {Signatures, SIGNATURES_DUR} from './scenes/Signatures';
+import {Close, CLOSE_DUR} from './scenes/Close';
 import {Captions} from './lib/Captions';
 import {FPS} from './theme';
 
@@ -21,7 +22,7 @@ const Solo: React.FC<{id: string; children: React.ReactNode}> = ({id, children})
     <AbsoluteFill>
       {children}
       <Audio src={staticFile('mix.wav')} startFrom={s.startF} />
-      <Captions offset={s.start} />
+      {id !== 's8' && <Captions offset={s.start} />}
     </AbsoluteFill>
   );
 };
@@ -49,6 +50,11 @@ export const RemotionRoot: React.FC = () => (
       id="S5-signatures"
       component={() => <Solo id="s5"><Signatures /></Solo>}
       durationInFrames={SIGNATURES_DUR} fps={FPS} width={1920} height={1080}
+    />
+    <Composition
+      id="S8-close"
+      component={() => <Solo id="s8"><Close /></Solo>}
+      durationInFrames={CLOSE_DUR} fps={FPS} width={1920} height={1080}
     />
   </>
 );
