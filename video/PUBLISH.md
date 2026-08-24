@@ -95,7 +95,7 @@ Alternates, if the first reads long in the sidebar:
   is separate from an AWS account.
 - **AWS promotional credits**, $50, form closes 11 Sep 2026 at 12pm PT:
   https://forms.gle/6sjzKiX6bKUMA5NEA
-- **builder.aws.com**, where the bonus posts go: https://builder.aws.com
+- **The bonus post**, published: https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking
 - Submission page: https://agentsforhumans.devpost.com
 
 ---

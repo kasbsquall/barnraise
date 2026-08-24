@@ -13,6 +13,10 @@ Agents for Humans Hackathon, track **Good Neighbor Agents**.
 **Watch it work:** [youtube.com/watch?v=sdSvH0PwtYQ](https://www.youtube.com/watch?v=sdSvH0PwtYQ)
 · 2:53 · six agents negotiating, two signatures, and what the product refuses to do.
 
+**How it was built,** including the two things that were broken for longer than I
+would like to admit: [Agents for Humans: six Strands agents, one ledger, and the
+pause that would not stop asking](https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking) on AWS Builder Center.
+
 ---
 
 ## The problem

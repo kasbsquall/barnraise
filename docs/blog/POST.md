@@ -3,6 +3,8 @@
 *The single post for the builder.aws bonus. It merges the three earlier drafts in
 this folder, which are kept because they are the long form of each section.*
 
+*Published at https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking*
+
 ---
 
 Almost every agent I have seen in the nonprofit and civic space automates the

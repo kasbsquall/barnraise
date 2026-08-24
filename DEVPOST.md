@@ -110,6 +110,7 @@ fastapi · sqlite · maplibre · openstreetmap · osrm · remotion
 
 - Demo video: https://www.youtube.com/watch?v=sdSvH0PwtYQ
 - Repository: https://github.com/kasbsquall/barnraise
+- Build write-up: https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking
 - Runs locally with no key at all on Ollama, or on Gemini's free tier.
 
 ---
@@ -146,6 +147,7 @@ afirmación que sería fácil hacer y que no se sostiene.
       Falta pegar el enlace en el formulario de envío.
 - [ ] **Diagrama de arquitectura**: existe en docs/ARCHITECTURE.md y está enlazado
       desde el README. Repasar que se vea al abrirlo desde el envío.
-- [ ] Posts de builder.aws.com publicados (hasta 0,6 puntos, tres borradores en
-      docs/blog).
+- [x] Post de builder.aws.com publicado (0,2 puntos). Falta pegar la URL en el
+      campo del bonus del formulario:
+      https://builder.aws.com/content/3INkNpD9WU7cRi69pfK13Ul7Yve/agents-for-humans-six-strands-agents-one-ledger-and-the-pause-that-would-not-stop-asking
 - [ ] Claves de Gemini y ElevenLabs rotadas.
