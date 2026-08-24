@@ -6,6 +6,10 @@ is ever re-recorded they move and this file is regenerated with it.
 
 ---
 
+## Published
+
+https://www.youtube.com/watch?v=sdSvH0PwtYQ
+
 ## The file
 
 `video/remotion/out/barnraise_master.mp4`

@@ -23,7 +23,18 @@ def get_model():
 
     if provider == "bedrock":
         # Bedrock is the Strands default; the model id resolves via AWS creds.
-        return os.getenv("BARNRAISE_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+        #
+        # Current Claude ids on Bedrock carry no date suffix and no ":v1:0" tail,
+        # unlike the older "us.anthropic.claude-sonnet-4-20250514-v1:0" shape. The
+        # prefix selects where inference runs: "global." routes worldwide and is
+        # available in the most regions, "us." / "eu." / "au." keep data inside
+        # that geography, and a bare "anthropic.claude-opus-5" is in-region only.
+        # Swap the prefix if you have a data residency requirement.
+        #
+        # Access is granted per model in the Bedrock console, so an account that
+        # has not enabled this one gets an AccessDeniedException rather than a
+        # wrong answer. Override with BARNRAISE_BEDROCK_MODEL.
+        return os.getenv("BARNRAISE_BEDROCK_MODEL", "global.anthropic.claude-opus-5")
 
     if provider == "gemini":
         from strands.models.gemini import GeminiModel

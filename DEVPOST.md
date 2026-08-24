@@ -108,6 +108,7 @@ fastapi · sqlite · maplibre · openstreetmap · osrm · remotion
 
 ## Try it out
 
+- Demo video: https://www.youtube.com/watch?v=sdSvH0PwtYQ
 - Repository: https://github.com/kasbsquall/barnraise
 - Runs locally with no key at all on Ollama, or on Gemini's free tier.
 
@@ -139,7 +140,12 @@ afirmación que sería fácil hacer y que no se sostiene.
 ## Pendiente antes de enviar
 
 - [ ] **AWS Builder ID creado.** Es entregable obligatorio.
-- [ ] **Límite de duración del vídeo leído en las bases.** El montaje dura 2:52,9
-      asumiendo un tope de 3:00, y esa suposición no está verificada.
-- [ ] Vídeo subido y el enlace pegado en el envío.
+- [x] **Límite de duración del vídeo leído en las bases.** El tope son 5:00 y el
+      montaje dura 2:52,9, así que sobra margen.
+- [x] Vídeo subido: https://www.youtube.com/watch?v=sdSvH0PwtYQ
+      Falta pegar el enlace en el formulario de envío.
+- [ ] **Diagrama de arquitectura**: existe en docs/ARCHITECTURE.md y está enlazado
+      desde el README. Repasar que se vea al abrirlo desde el envío.
+- [ ] Posts de builder.aws.com publicados (hasta 0,6 puntos, tres borradores en
+      docs/blog).
 - [ ] Claves de Gemini y ElevenLabs rotadas.
