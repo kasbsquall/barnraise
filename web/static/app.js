@@ -138,6 +138,7 @@ const PHASE = {
 
 let state = null;
 let me = "north-food-bank";      // whose console this is
+let identidadElegida = false;    // true once a visitor cycles it themselves
 let lastPendingSeen = null;
 
 /* ---------- data ---------- */
@@ -179,6 +180,18 @@ function initials(orgId) {
 
 function render() {
   if (!state) return;
+  // On the public demo a visitor should land on the console that has something to
+  // do. Arriving as a director with nothing pending makes the product look like a
+  // read-only map, and the one action worth showing is a signature.
+  if (state.demo && !identidadElegida) {
+    const espera = (state.acuerdos || []).find((a) => a.estado === "propuesto");
+    if (espera) {
+      const partes = [espera.org_proveedora, espera.org_solicitante];
+      const debe = partes.find((org) => !(state.firmas_acuerdo || []).some(
+        (f) => f.acuerdo_id === espera.id && f.org_id === org && f.decision === "aprobado"));
+      if (debe) me = debe;
+    }
+  }
   renderIdentity();
   renderFund();
   renderLedger();
@@ -631,11 +644,18 @@ function renderPhase(fase) {
     renderPending(state.ronda.pendiente || null);
   }
   $("#live-text").textContent = PHASE[fase] || fase;
+  // On the public demo the round buttons are off for good, not until a round
+  // finishes, and saying so is better than letting a visitor click a button that
+  // returns a 503 they will read as broken.
+  const demo = !!state?.demo;
   const busy = fase !== "idle" && fase !== "inactiva";
   [$("#btn-round"), ...document.querySelectorAll("[data-coalition]")].forEach((b) => {
-    if (busy) { b.setAttribute("aria-disabled", "true"); b.title = "A round is already running"; }
+    if (demo) { b.setAttribute("aria-disabled", "true"); b.title = "Not available on the public demo"; }
+    else if (busy) { b.setAttribute("aria-disabled", "true"); b.title = "A round is already running"; }
     else { b.removeAttribute("aria-disabled"); b.removeAttribute("title"); }
   });
+  const aviso = $("#demo-note");
+  if (aviso) aviso.hidden = !demo;
 }
 
 const TERM_LABEL = {
@@ -969,6 +989,7 @@ $("#identity").addEventListener("click", () => {
   const ids = state ? state.organizaciones.map((o) => o.org_id) : [];
   if (!ids.length) return;
   me = ids[(ids.indexOf(me) + 1) % ids.length];
+  identidadElegida = true;
   // The acknowledgement is written in the first person, so it belongs to the
   // director who acted. Leaving it up after a switch put "You signed as Luis
   // Mendoza" on Ana Torres's screen, on the one screen whose whole job is to

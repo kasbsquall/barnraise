@@ -4,6 +4,7 @@ Run with:  python web/server.py
 """
 import asyncio
 import json
+import os
 import sys
 import threading
 from pathlib import Path
@@ -18,6 +19,18 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agents.org_profile import OrgProfile
+
+# A public demo runs without the model. Everything deterministic stays live: the
+# map, the ledger, the eligibility scan and, most of all, signing. Starting a
+# round is what costs money and what one visitor can take from another, since the
+# app holds one round at a time, so that is the one thing the flag turns off.
+DEMO = os.getenv("BARNRAISE_DEMO") == "1"
+SIN_RONDAS = (
+    "This is the public demo, and it runs without a model provider so it cannot be "
+    "exhausted or held by one visitor. Everything else is live: the ledger is real, "
+    "the eligibility scan is computed from it, and the agreement awaiting a signature "
+    "is really waiting. Clone the repository to watch the agents negotiate."
+)
 from agents.tools.grants import Convocatoria, evaluar
 from ledger import book
 from ledger.evidence import evidencia_de_colaboracion
@@ -123,6 +136,7 @@ async def state() -> dict:
         vinculos[par] = vinculos.get(par, 0) + 1
 
     return {
+        "demo": DEMO,
         "organizaciones": organizaciones,
         "vinculos": [{"a": a, "b": b, "acuerdos": n} for (a, b), n in vinculos.items()],
         "acuerdos": acuerdos,
@@ -181,6 +195,8 @@ class RondaRequest(BaseModel):
 
 @app.post("/api/round/exchange")
 async def iniciar_ronda(req: RondaRequest) -> dict:
+    if DEMO:
+        raise HTTPException(503, SIN_RONDAS)
     if runner.ocupado():
         raise HTTPException(409, "A round is already running.")
     threading.Thread(target=runner.ronda_intercambio, args=(req.org_id,), daemon=True).start()
@@ -189,6 +205,8 @@ async def iniciar_ronda(req: RondaRequest) -> dict:
 
 @app.post("/api/round/coalition")
 async def iniciar_coalicion() -> dict:
+    if DEMO:
+        raise HTTPException(503, SIN_RONDAS)
     if runner.ocupado():
         raise HTTPException(409, "A round is already running.")
     threading.Thread(target=runner.ronda_coalicion, daemon=True).start()

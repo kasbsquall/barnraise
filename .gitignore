@@ -23,3 +23,5 @@ video/capture/node_modules/
 video/remotion/node_modules/
 video/remotion/out/
 video/remotion/public/vid/
+
+deploy/.env

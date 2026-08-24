@@ -1,0 +1,92 @@
+# The public demo, hardened.
+#
+# Two rules govern this file. Only the reverse proxy is reachable from the
+# internet, and every container has a ceiling. A demo that a stranger can knock
+# over, or that can eat a host, is not a demo.
+#
+#   cp deploy/.env.example deploy/.env   and set DOMAIN
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# Run deploy/audit.sh afterwards. It checks what this file promises.
+
+services:
+  # The console and the ledger. It publishes NOTHING: caddy reaches it by service
+  # name over the internal network. There is no "8080:8080" here on purpose, and
+  # adding one would put the app on the public interface.
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      BARNRAISE_DEMO: "1"
+      BARNRAISE_DB: /data/barrio.db
+    volumes:
+      - ledger:/data
+    networks: [interna]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 640m
+    cpus: 0.75
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/api/state', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Puts the ledger back every quarter of an hour, so the agreement awaiting a
+  # signature is always waiting for the next visitor. This is the whole reason
+  # the demo can be left running unattended.
+  reset:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      BARNRAISE_DB: /data/barrio.db
+    volumes:
+      - ledger:/data
+    networks: [interna]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 192m
+    cpus: 0.25
+    command: >
+      sh -c 'python seed/demo_state.py --apply;
+             while sleep ${RESET_SECONDS:-900}; do python seed/demo_state.py --apply; done'
+
+  # The only container the internet can reach. Caddy gets and renews the
+  # certificate on its own; 80 exists so the ACME challenge and the redirect to
+  # 443 work, and serves nothing else.
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [interna]
+    depends_on: [app]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: 192m
+    cpus: 0.5
+
+networks:
+  interna:
+    driver: bridge
+
+volumes:
+  ledger:
+  caddy_data:
+  caddy_config:

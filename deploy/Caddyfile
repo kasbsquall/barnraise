@@ -1,0 +1,27 @@
+# TLS is automatic: Caddy gets and renews a certificate for {$DOMAIN} over ACME,
+# which is why port 80 is open at all.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# There is no rate_limit directive here on purpose: it is a plugin, not part of
+	# the standard Caddy image, and a Caddyfile that names it stops the container
+	# from starting at all. With rounds disabled there is no expensive path left to
+	# protect, and the remaining cost is bandwidth on static assets. If this ever
+	# serves something expensive again, build Caddy with caddy-ratelimit rather
+	# than adding the directive to this file and hoping.
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "strict-origin-when-cross-origin"
+		Permissions-Policy        "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	reverse_proxy app:8080 {
+		# The console is a live event stream. Without this, Caddy buffers
+		# /api/stream and the page looks frozen.
+		flush_interval -1
+	}
+}

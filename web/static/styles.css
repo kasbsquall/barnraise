@@ -387,6 +387,20 @@ body { overflow: hidden; }
 
 .hint { font-size: var(--t-small); color: var(--ink-soft); }
 
+/* The public demo notice. It sits where the round button's own hint sits, reads
+   as part of the panel rather than as a banner pasted over it, and carries the
+   one colour the interface reserves for something a director must act on. */
+.hint--demo {
+  margin-top: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: rgba(6, 217, 250, 0.06);
+  border: 1px solid rgba(6, 217, 250, 0.24);
+  border-radius: 3px;
+  line-height: 1.55;
+}
+.hint--demo strong { color: var(--ink); font-weight: 600; }
+.hint--demo a { color: var(--route-lib); }
+
 .section-head {
   display: flex; align-items: baseline; justify-content: space-between;
   flex-wrap: wrap; gap: var(--s-4);

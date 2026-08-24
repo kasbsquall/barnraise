@@ -3,12 +3,16 @@
 An agreement only reaches 'aprobado' when both organizations have approved it.
 A single approval is never enough.
 """
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "ledger" / "barrio.db"
+# Beside the code when you clone and run it, which is what a reader expects, but
+# overridable because a container should not be writing inside its own source
+# tree: the deployed image mounts a volume and points this at it.
+DB_PATH = Path(os.getenv("BARNRAISE_DB") or ROOT / "ledger" / "barrio.db")
 SCHEMA_PATH = ROOT / "ledger" / "schema.sql"
 
 

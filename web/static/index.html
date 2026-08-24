@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
-<link rel="stylesheet" href="/static/styles.css?v=37">
+<link rel="stylesheet" href="/static/styles.css?v=38">
 </head>
 <body>
 
@@ -137,6 +137,18 @@
         <div class="run">
           <button class="btn btn--primary" id="btn-round" type="button"><span>Run an exchange round</span></button>
           <p class="hint">Your agent asks the neighbors what is idle, negotiates terms, and stops for you to sign.</p>
+          <!-- Shown only when BARNRAISE_DEMO is set. A visitor who cannot start a
+               round deserves to know why, and which half of the product is still
+               real in front of them. -->
+          <p class="hint hint--demo" id="demo-note" hidden>
+            <strong>Public demo.</strong> Running a round calls a model, so it is off here:
+            one visitor could exhaust it or hold it. Everything else is live. The ledger is
+            real, the funding call is scanned from it in plain code, and
+            <strong>entry #9 is genuinely waiting for a second signature</strong> &mdash; sign
+            it as Rosa Diaz and watch the collaboration requirement move.
+            <a href="https://github.com/kasbsquall/barnraise">Clone the repository</a> to
+            watch the agents negotiate.
+          </p>
         </div>
 
         <!-- the organization the map has selected -->
@@ -195,8 +207,8 @@
 </main>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
-<script src="/static/app.js?v=37"></script>
-<script src="/static/neighborhood.js?v=37"></script>
+<script src="/static/app.js?v=38"></script>
+<script src="/static/neighborhood.js?v=38"></script>
 <script>window.__boot && window.__boot();</script>
 </body>
 </html>
